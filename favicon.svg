@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" fill="#0a0a0f"/>
+  <g stroke="#c9a84c" fill="none" stroke-width="0.8" transform="translate(16,16)">
+    <!-- Outer hexagon -->
+    <polygon points="0,-13 11.26,-6.5 11.26,6.5 0,13 -11.26,6.5 -11.26,-6.5"/>
+    <!-- Inner hexagon (rotated 30deg) -->
+    <polygon points="7.5,-4.33 7.5,4.33 0,8.66 -7.5,4.33 -7.5,-4.33 0,-8.66" opacity="0.7"/>
+    <!-- Cross lines (Metatron's Cube simplified) -->
+    <line x1="0" y1="-13" x2="0" y2="13" opacity="0.4"/>
+    <line x1="-11.26" y1="-6.5" x2="11.26" y2="6.5" opacity="0.4"/>
+    <line x1="-11.26" y1="6.5" x2="11.26" y2="-6.5" opacity="0.4"/>
+    <!-- Center circle -->
+    <circle cx="0" cy="0" r="3" opacity="0.6"/>
+  </g>
+</svg>

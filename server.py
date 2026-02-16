@@ -1,0 +1,23 @@
+import http.server
+import json
+import os
+
+PORT = int(os.environ.get("PORT", 8080))
+
+class Handler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == "/health":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "healthy"}).encode())
+            return
+        return super().do_GET()
+
+    def log_message(self, format, *args):
+        pass  # quiet logs
+
+if __name__ == "__main__":
+    server = http.server.HTTPServer(("0.0.0.0", PORT), Handler)
+    print(f"Serving on port {PORT}")
+    server.serve_forever()
