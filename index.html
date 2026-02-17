@@ -7,14 +7,14 @@
 
     <!-- OG / Social -->
     <meta property="og:title" content="TIMEPOINT AI — Synthetic Time Travel™">
-    <meta property="og:description" content="The temporal AI lab. Render any moment in history. Simulate causal chains. Bet on what happens next.">
+    <meta property="og:description" content="The temporal AI lab. Render any moment in history. Simulate causal chains. Score what happens next.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://timepointai.com">
-    <meta name="description" content="The temporal AI lab. Render any moment in history. Simulate causal chains. Bet on what happens next.">
+    <meta name="description" content="The temporal AI lab. Render any moment in history. Simulate causal chains. Score what happens next.">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@seanmcdonaldxyz">
     <meta name="twitter:title" content="TIMEPOINT AI — Synthetic Time Travel™">
-    <meta name="twitter:description" content="The temporal AI lab. Render any moment in history. Simulate causal chains. Bet on what happens next.">
+    <meta name="twitter:description" content="The temporal AI lab. Render any moment in history. Simulate causal chains. Score what happens next.">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -92,6 +92,10 @@
         @keyframes glow-breathe {
             0%, 100% { opacity: 0.4; }
             50%      { opacity: 0.7; }
+        }
+        @keyframes flow-pulse {
+            0%, 100% { opacity: 0.3; }
+            50%      { opacity: 1; }
         }
 
         /* ============================================
@@ -181,8 +185,6 @@
 
         /* ============================================
            HERO — Boullée's Cenotaph for Newton
-           Spherical void, single point of light,
-           impossible cosmic scale
            ============================================ */
         .hero {
             position: relative;
@@ -193,8 +195,6 @@
             overflow: hidden;
             background: var(--void);
         }
-
-        /* Orrery / armillary sphere rings */
         .hero-orrery {
             position: absolute;
             top: 50%;
@@ -227,7 +227,6 @@
             border: 1px solid rgba(191, 164, 111, 0.025);
             animation: pulse-ring 18s ease infinite 6s;
         }
-        /* Orrery node — small lit point on middle ring */
         .orrery-node {
             position: absolute;
             width: 3px;
@@ -240,8 +239,6 @@
             transform: translate(210px, 0);
             animation: glow-breathe 4s ease infinite;
         }
-
-        /* Radial god-ray from center */
         .hero-godray {
             position: absolute;
             top: 50%;
@@ -258,8 +255,6 @@
             pointer-events: none;
             z-index: 0;
         }
-
-        /* Hero background image — almost invisible, textural */
         .hero-bg {
             position: absolute;
             inset: 0;
@@ -277,7 +272,6 @@
             );
             z-index: 1;
         }
-
         .hero-content {
             position: relative;
             z-index: 2;
@@ -322,8 +316,6 @@
             margin-left: auto;
             margin-right: auto;
         }
-
-        /* Timeline scrubber — mission control instrument */
         .scrubber {
             display: flex;
             align-items: center;
@@ -355,7 +347,6 @@
             letter-spacing: 0.15em;
             margin: 0 5px;
         }
-
         .cta {
             display: inline-block;
             font-family: var(--mono);
@@ -377,7 +368,6 @@
 
         /* ============================================
            Section labels — Aicher systematic grid
-           Numbers as ghosts, labels as brass inscriptions
            ============================================ */
         .sec-label {
             font-family: var(--mono);
@@ -394,8 +384,7 @@
         }
 
         /* ============================================
-           THE LAB — manifesto
-           Carved in marble, backlit by orrery
+           THE SYSTEM — manifesto + flow diagram
            ============================================ */
         .manifesto {
             max-width: 620px;
@@ -412,9 +401,103 @@
             font-weight: 500;
         }
 
+        /* System flow diagram */
+        .system-flow {
+            margin: 3.5rem 0 1rem;
+            padding: 2.5rem 2rem;
+            background: var(--void-near);
+            border: 1px solid rgba(191, 164, 111, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+        .system-flow::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.2), transparent);
+        }
+        .system-flow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.25rem;
+            margin-bottom: 1.75rem;
+        }
+        .system-flow-step:last-child { margin-bottom: 0; }
+        .system-flow-node {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(191, 164, 111, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .system-flow-node::after {
+            content: '';
+            position: absolute;
+            top: 36px;
+            left: 50%;
+            width: 1px;
+            height: calc(100% + 1.75rem);
+            background: linear-gradient(180deg, rgba(191, 164, 111, 0.15), transparent);
+        }
+        .system-flow-step:last-child .system-flow-node::after { display: none; }
+        .system-flow-dot {
+            width: 4px;
+            height: 4px;
+            background: var(--gold);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--gold-glow-hot);
+        }
+        .system-flow-text {
+            padding-top: 0.4rem;
+        }
+        .system-flow-name {
+            font-family: var(--display);
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--selenite);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+        .system-flow-desc {
+            font-size: 0.85rem;
+            color: var(--marble);
+            line-height: 1.7;
+        }
+        .system-flow-desc strong {
+            color: var(--selenite);
+            font-weight: 500;
+        }
+
+        /* System loop closer */
+        .system-loop {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(191, 164, 111, 0.04);
+        }
+        .system-loop p {
+            font-size: 0.88rem;
+            color: var(--marble);
+            line-height: 1.85;
+        }
+        .system-loop strong {
+            color: var(--selenite);
+            font-weight: 500;
+        }
+        .system-loop em {
+            color: var(--amber);
+            font-style: italic;
+        }
+
         /* ============================================
            Product cards — Ferriss charcoal monoliths
-           Recessed panels, column grid, amber backlighting
            ============================================ */
         .product {
             background: var(--void-near);
@@ -424,7 +507,6 @@
             position: relative;
             overflow: hidden;
         }
-        /* Top light-slit — architectural light source */
         .product::before {
             content: '';
             position: absolute;
@@ -501,6 +583,29 @@
         }
         .product-repo::before { content: '> '; opacity: 0.3; }
 
+        /* In SNAG Bench callout */
+        .product-bench {
+            margin-top: 1.5rem;
+            padding: 1.25rem 1.5rem;
+            background: var(--void);
+            border: 1px solid rgba(191, 164, 111, 0.06);
+            border-left: 2px solid var(--gold-dim);
+        }
+        .product-bench-label {
+            font-family: var(--mono);
+            font-size: 0.55rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+        .product-bench p {
+            font-size: 0.82rem;
+            color: var(--marble);
+            line-height: 1.75;
+            margin-bottom: 0;
+        }
+
         /* Capabilities list — brass bullet points */
         .caps {
             list-style: none;
@@ -544,7 +649,6 @@
 
         /* ============================================
            Scene cards — Criterion Collection precision
-           Period-perfect + sublime + interrogatable
            ============================================ */
         .scenes-grid {
             display: grid;
@@ -578,7 +682,6 @@
             position: relative;
             overflow: hidden;
         }
-        /* Architectural light slit across void header */
         .scene-void::after {
             content: '';
             position: absolute;
@@ -634,8 +737,209 @@
         }
 
         /* ============================================
+           SNAG Bench section
+           ============================================ */
+        .bench-intro {
+            max-width: 620px;
+            margin-bottom: 3rem;
+        }
+        .bench-intro p {
+            font-size: clamp(0.95rem, 2vw, 1.05rem);
+            color: var(--marble);
+            line-height: 1.9;
+            font-weight: 300;
+        }
+        .bench-intro strong {
+            color: var(--selenite);
+            font-weight: 500;
+        }
+
+        /* Triple format */
+        .bench-triple {
+            font-family: var(--mono);
+            font-size: 0.85rem;
+            color: var(--gold);
+            background: var(--void);
+            border: 1px solid rgba(191, 164, 111, 0.06);
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0 2.5rem;
+            text-align: center;
+            letter-spacing: 0.05em;
+        }
+
+        /* Axis cards */
+        .bench-axes {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .bench-axis {
+            background: var(--void-near);
+            border: 1px solid rgba(191, 164, 111, 0.04);
+            padding: 2rem 2rem 1.75rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .bench-axis::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--gold-dim), transparent);
+        }
+        .bench-axis-head {
+            display: flex;
+            align-items: baseline;
+            gap: 0.75rem;
+            margin-bottom: 0.3rem;
+            flex-wrap: wrap;
+        }
+        .bench-axis-num {
+            font-family: var(--mono);
+            font-size: 0.55rem;
+            letter-spacing: 0.15em;
+            color: var(--gold);
+        }
+        .bench-axis-name {
+            font-family: var(--display);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--selenite);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .bench-axis-scored {
+            font-family: var(--mono);
+            font-size: 0.55rem;
+            letter-spacing: 0.1em;
+            color: var(--gold-dim);
+            margin-bottom: 1rem;
+        }
+        .bench-axis p {
+            font-size: 0.85rem;
+            color: var(--marble);
+            line-height: 1.75;
+            margin-bottom: 0.5rem;
+        }
+        .bench-axis strong {
+            color: var(--selenite);
+            font-weight: 500;
+        }
+        .bench-metric {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--gold);
+            margin: 0.75rem 0 0.25rem;
+        }
+
+        /* Leaderboard */
+        .leaderboard {
+            background: var(--terminal-bg);
+            border: 1px solid rgba(191, 164, 111, 0.05);
+            padding: 1.5rem 1.75rem;
+            margin: 2rem 0;
+            overflow-x: auto;
+        }
+        .leaderboard-title {
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--gold-dim);
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(191, 164, 111, 0.04);
+        }
+        .leaderboard table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--mono);
+            font-size: 0.72rem;
+        }
+        .leaderboard th {
+            text-align: left;
+            color: var(--gold-dim);
+            font-weight: 500;
+            padding: 0.5rem 1rem 0.5rem 0;
+            border-bottom: 1px solid rgba(191, 164, 111, 0.06);
+            letter-spacing: 0.08em;
+            white-space: nowrap;
+        }
+        .leaderboard td {
+            padding: 0.6rem 1rem 0.6rem 0;
+            color: var(--marble);
+            border-bottom: 1px solid rgba(191, 164, 111, 0.02);
+            white-space: nowrap;
+        }
+        .leaderboard .lb-dir {
+            color: rgba(191, 164, 111, 0.25);
+            font-size: 0.6rem;
+        }
+        .leaderboard .lb-coming {
+            color: var(--gold-dim);
+            font-style: italic;
+            padding: 1rem 0;
+            text-align: center;
+        }
+
+        .bench-why {
+            max-width: 620px;
+            margin-top: 2.5rem;
+        }
+        .bench-why p {
+            font-size: 0.88rem;
+            color: var(--marble);
+            line-height: 1.85;
+        }
+        .bench-why strong {
+            color: var(--selenite);
+            font-weight: 500;
+        }
+
+        /* ============================================
+           Use Cases table
+           ============================================ */
+        .usecases {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+        }
+        .usecases th {
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--gold-dim);
+            font-weight: 500;
+            text-align: left;
+            padding: 0.75rem 1.25rem 0.75rem 0;
+            border-bottom: 1px solid rgba(191, 164, 111, 0.08);
+        }
+        .usecases td {
+            font-size: 0.82rem;
+            color: var(--marble);
+            padding: 1rem 1.25rem 1rem 0;
+            border-bottom: 1px solid rgba(191, 164, 111, 0.03);
+            line-height: 1.6;
+            vertical-align: top;
+        }
+        .usecases td:first-child {
+            font-weight: 500;
+            color: var(--selenite);
+            white-space: nowrap;
+        }
+        .usecases td:last-child {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--gold-dim);
+            white-space: nowrap;
+        }
+
+        /* ============================================
            Terminal blocks — Ron Cobb utilitarian ship
-           Ancient scroll fused with mission control
            ============================================ */
         .terminal {
             background: var(--terminal-bg);
@@ -732,7 +1036,6 @@
 
         /* ============================================
            Vision — Interstellar tesseract
-           Time as a physical space you inhabit
            ============================================ */
         .vision {
             max-width: 620px;
@@ -758,6 +1061,10 @@
         .vision strong {
             color: var(--selenite);
             font-weight: 500;
+        }
+        .vision em {
+            color: var(--amber);
+            font-style: italic;
         }
 
         /* ============================================
@@ -792,6 +1099,41 @@
             font-size: 0.75rem;
             color: var(--marble);
             line-height: 1.5;
+        }
+        .repo-coming {
+            font-family: var(--mono);
+            font-size: 0.55rem;
+            color: var(--gold-dim);
+            letter-spacing: 0.1em;
+        }
+
+        /* ============================================
+           Closing / Coda
+           ============================================ */
+        .coda {
+            text-align: center;
+            padding: 6rem 0 2rem;
+        }
+        .coda blockquote {
+            max-width: 520px;
+            margin: 0 auto;
+        }
+        .coda blockquote p {
+            font-family: var(--sans);
+            font-size: clamp(1rem, 2vw, 1.12rem);
+            font-weight: 300;
+            color: var(--marble);
+            line-height: 2;
+            margin-bottom: 0.5rem;
+        }
+        .coda-arriving {
+            font-family: var(--display);
+            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--selenite);
+            margin-top: 2rem;
         }
 
         /* ============================================
@@ -830,6 +1172,7 @@
             justify-content: center;
             gap: 2.5rem;
             flex-wrap: wrap;
+            margin-bottom: 2rem;
         }
         .foot-links a {
             font-family: var(--mono);
@@ -838,6 +1181,12 @@
             letter-spacing: 0.08em;
         }
         .foot-links a:hover { color: var(--gold); }
+        .foot-copy {
+            font-family: var(--mono);
+            font-size: 0.55rem;
+            color: rgba(191, 164, 111, 0.2);
+            letter-spacing: 0.05em;
+        }
 
         /* ============================================
            Responsive
@@ -851,6 +1200,9 @@
             .scene-body { padding: 1.25rem 1.5rem; }
             .scene-date { font-size: 0.85rem; }
             .scene-dialog p { font-size: 0.8rem; }
+            .bench-axes {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
         @media (max-width: 639px) {
             section { padding: 5rem 0; }
@@ -862,14 +1214,15 @@
             .product { padding: 1.75rem; }
             .repo-grid { grid-template-columns: 1fr; }
             .foot-links { flex-direction: column; gap: 1rem; }
+            .usecases td:first-child { white-space: normal; }
+            .usecases td:last-child { white-space: normal; }
         }
     </style>
 </head>
 <body>
 
     <!-- ==========================================
-         HERO — Boullée's Cenotaph for Newton
-         Spherical void, orrery rings, god-ray center
+         HERO
          ========================================== -->
     <section class="hero">
         <div class="hero-bg"></div>
@@ -900,26 +1253,60 @@
                 <span class="scrub-seg"></span>
                 <span class="scrub-label">20??</span>
             </div>
-            <p class="hero-sub fade-in d3">Render any moment in human history. Simulate the causal chains that connect them. Bet on what happens next.</p>
-            <a href="#products" class="cta fade-in d4">EXPLORE THE LAB</a>
+            <p class="hero-sub fade-in d3">Render any moment in human history. Simulate the causal chains that connect them. Score what happens next.</p>
+            <a href="#system" class="cta fade-in d4">EXPLORE THE LAB</a>
         </div>
     </section>
 
     <!-- ==========================================
-         THE LAB — manifesto
+         01 — THE SYSTEM
          ========================================== -->
     <div class="lightslit"></div>
-    <section id="lab">
+    <section id="system">
         <div class="container">
-            <div class="sec-label fade-in"><span class="sec-num">01</span>THE LAB</div>
+            <div class="sec-label fade-in"><span class="sec-num">01</span>THE SYSTEM</div>
             <div class="manifesto fade-in d1">
-                <p>Time is the most underexplored dimension in AI. Current models treat it as a flat token — a date stamp, a before/after. We treat it as a landscape you can traverse. TIMEPOINT builds engines for <strong>Synthetic Time Travel™</strong>: rendering historical moments with grounded fidelity, simulating social dynamics across temporal arcs, and creating markets where precision about the future is continuously rewarded.</p>
+                <p>Time is the most underexplored dimension in AI. Current models treat it as a flat token — a date stamp, a before/after. We treat it as a landscape you can traverse, a graph you can query, and a truth you can score.</p>
+            </div>
+
+            <div class="system-flow fade-in d2">
+                <div class="system-flow-step">
+                    <div class="system-flow-node"><div class="system-flow-dot"></div></div>
+                    <div class="system-flow-text">
+                        <div class="system-flow-name">Flash</div>
+                        <div class="system-flow-desc">Renders any moment as a complete scene — characters, dialog, images — grounded by Google Search.</div>
+                    </div>
+                </div>
+                <div class="system-flow-step">
+                    <div class="system-flow-node"><div class="system-flow-dot"></div></div>
+                    <div class="system-flow-text">
+                        <div class="system-flow-name">Daedalus</div>
+                        <div class="system-flow-desc">Simulates the causal chains <em>between</em> moments — dozens of entities, hundreds of timepoints, with auditable provenance. Every run produces structured training data for fine-tuning.</div>
+                    </div>
+                </div>
+                <div class="system-flow-step">
+                    <div class="system-flow-node"><div class="system-flow-dot"></div></div>
+                    <div class="system-flow-text">
+                        <div class="system-flow-name">Proteus</div>
+                        <div class="system-flow-desc">Lets AI agents bet on <em>future</em> moments with character-level precision — a prediction market where the game deepens as models improve.</div>
+                    </div>
+                </div>
+                <div class="system-flow-step">
+                    <div class="system-flow-node"><div class="system-flow-dot"></div></div>
+                    <div class="system-flow-text">
+                        <div class="system-flow-name">SNAG Bench</div>
+                        <div class="system-flow-desc">Scores it all — an open standard for temporal reasoning that uses Flash for grounding evaluation, Daedalus for coherence testing, and Proteus for live predictive accuracy.</div>
+                    </div>
+                </div>
+                <div class="system-loop">
+                    <p>Together, they form a closed loop: render the past, simulate the dynamics, predict the future, score the predictions, improve the models. We call the accumulated output <strong>the Clockchain</strong> — <em>a continuously refined, probabilistically scored reconstruction of what actually happened and what was actually said throughout human history.</em></p>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- ==========================================
-         PRODUCTS
+         02 — PRODUCTS
          ========================================== -->
     <div class="lightslit"></div>
     <section id="products">
@@ -931,6 +1318,7 @@
                 <div class="product-head">
                     <span class="product-name">FLASH</span>
                     <span class="product-badge">Open Source</span>
+                    <span class="product-badge">Apache 2.0</span>
                 </div>
                 <div class="product-sub">Scene Generation Engine</div>
                 <p>Type a query. Get a complete historical scene: verified location, characters with distinct voices, period-accurate dialog, and a photorealistic AI image. 14 specialized agents, Google Search grounding, critique-retry loops, 3-tier image fallback.</p>
@@ -942,6 +1330,11 @@
                           <span class="node">Dialog</span> <span class="arrow">→</span> <span class="node">Critique</span> <span class="comment">(auto-retry)</span>
                                                 <span class="arrow">↓</span>
                           <span class="node">ImagePrompt</span> <span class="arrow">→</span> <span class="node">Optimizer</span> <span class="arrow">→</span> <span class="node">ImageGen</span></div>
+
+                <div class="product-bench">
+                    <div class="product-bench-label">In SNAG Bench</div>
+                    <p>Flash's Grounding Agent and Critique Agent serve as the scoring rubric for historical fidelity. Every factual claim in a generated scene is verified against Google Search. Every dialog line is checked for anachronisms. The survival rate IS the score.</p>
+                </div>
 
                 <div class="product-stats">630+ tests · 14-agent pipeline · Google Search grounding · Apache 2.0</div>
                 <a href="https://github.com/timepoint-ai/timepoint-flash" class="product-repo">github.com/timepoint-ai/timepoint-flash</a>
@@ -988,17 +1381,27 @@
             <div class="product fade-in">
                 <div class="product-head">
                     <span class="product-name">DAEDALUS</span>
+                    <span class="product-badge">Open Source</span>
+                    <span class="product-badge">Apache 2.0</span>
                 </div>
                 <div class="product-sub">Social Network Augmented Generation</div>
-                <p>The first practical <strong>SNAG engine.</strong> RAG retrieves <em>documents</em>. SNAG retrieves and maintains a <em>structured social graph</em> — causal provenance, knowledge flow, emotional states, temporal consistency — to ground generation in complex group dynamics. RAG gives an LLM facts; SNAG gives it an entire social world.</p>
-                <p>Naive single-prompt simulations collapse beyond ~10 entities or ~20 interactions. SNAG scales to dozens of entities across hundreds of timepoints while keeping causality auditable ($0.15–$1.00/run).</p>
-                <p><strong>Training data is the killer app.</strong> Every run produces richly structured JSONL/SQLite with full causal ancestry, provenance chains, and counterfactual branches — purpose-built for fine-tuning on causal reasoning and social physics.</p>
+                <p><strong>The problem:</strong> LLMs collapse when simulating more than ~10 characters over ~20 interactions. Context explodes, personalities blur, causality drifts.</p>
+                <p><strong>The solution: SNAG.</strong> You know RAG — retrieve <em>documents</em> to ground generation. SNAG retrieves and maintains a <em>structured social graph</em>: relationships, secrets, power dynamics, emotional states, knowledge flow, and memory. RAG gives an LLM facts. SNAG gives it an entire social world.</p>
+                <p>Scales to dozens of entities across hundreds of timepoints. Causality stays auditable. $0.15–$1.00 per run.</p>
+                <p><strong>Training data is the killer app.</strong> Every run produces richly structured JSONL/SQLite with full causal ancestry, provenance chains, counterfactual branches, and quantitative entity states. Purpose-built for fine-tuning on causal reasoning, temporal consistency, and multi-agent dynamics. The synthetic data pipeline is the moat.</p>
                 <ul class="caps">
-                    <li><strong>5 temporal modes:</strong> PEARL, PORTAL, BRANCHING, CYCLICAL, DIRECTORIAL</li>
-                    <li><strong>PORTAL mode</strong> — backward-reasons from any future outcome to map the critical path</li>
-                    <li><strong>19 composable mechanisms</strong> with Params2Persona waveform + Fourth Wall context</li>
-                    <li>Convergence validation via repeated runs + Jaccard similarity on causal graphs</li>
+                    <li><strong>PEARL</strong> — strict forward causality</li>
+                    <li><strong>PORTAL</strong> — backward-reason from any target outcome to map the critical path</li>
+                    <li><strong>BRANCHING</strong> — counterfactual "what if" analysis</li>
+                    <li><strong>CYCLICAL</strong> — future constrains past (generational sagas)</li>
+                    <li><strong>DIRECTORIAL</strong> — dramatic tension drives events</li>
                 </ul>
+
+                <div class="product-bench">
+                    <div class="product-bench-label">In SNAG Bench</div>
+                    <p>Daedalus templates are the test harness. Run the same scenario with different models. Score entity consistency, causal validity, knowledge boundaries, voice distinctiveness, and convergence across repeated runs. Daedalus's existing quality gates ARE the rubric.</p>
+                </div>
+
                 <div class="product-stats">5 temporal modes · 19 mechanisms · PORTAL backward reasoning · $0.15–$1.00/run</div>
                 <a href="https://github.com/timepoint-ai/timepoint-daedalus" class="product-repo">github.com/timepoint-ai/timepoint-daedalus</a>
             </div>
@@ -1008,16 +1411,24 @@
                 <div class="product-head">
                     <span class="product-name">PROTEUS</span>
                     <span class="product-badge">Research Preview</span>
+                    <span class="product-badge">v0 Alpha</span>
+                    <span class="product-badge">BASE Sepolia</span>
                 </div>
                 <div class="product-sub">Prediction Markets for AI Agents</div>
-                <p>A prediction market protocol on BASE where <strong>AI agents stake ETH on the exact text</strong> a public figure will post. Scored by on-chain Levenshtein distance — not binary yes/no, but a continuous gradient where every character of precision is rewarded.</p>
-                <p><strong>The thesis:</strong> Binary prediction markets encode 1 bit per contract. As AI approaches superhuman forecasting, binary edges collapse to zero. Text prediction has a combinatorially explosive outcome space — the game deepens as AI improves.</p>
+                <p>Binary prediction markets encode one bit per contract. As AI approaches superhuman forecasting, the edge collapses. Proteus creates markets where the game <em>deepens</em> as AI improves.</p>
+                <p>AI agents stake ETH on the <strong>exact text</strong> a public figure will post. Scored by on-chain Levenshtein distance — a continuous gradient where every character of precision is rewarded.</p>
                 <ul class="caps">
                     <li>On-chain Levenshtein distance for winner determination</li>
                     <li><strong><code>__NULL__</code></strong> sentinel — bet on silence (a primitive binary markets lack)</li>
                     <li>Lipschitz-continuous payoff surface w.r.t. prediction quality</li>
                     <li>Natural anti-bot: random strings score ~max distance</li>
                 </ul>
+
+                <div class="product-bench">
+                    <div class="product-bench-label">In SNAG Bench</div>
+                    <p>Proteus resolved markets feed the benchmark as live predictive accuracy scores. Weight scales linearly with market size — a model that wins a 10 ETH market gets 10x the benchmark credit of a 1 ETH market. The test set is the future. It can never leak.</p>
+                </div>
+
                 <div class="product-stats">259+ tests · BASE Sepolia testnet · v0 alpha</div>
                 <a href="https://github.com/timepoint-ai/proteus" class="product-repo">github.com/timepoint-ai/proteus</a>
             </div>
@@ -1025,13 +1436,224 @@
     </section>
 
     <!-- ==========================================
-         GET STARTED — developer quickstart
-         Ancient scroll fused with mission-control terminal
+         03 — SNAG BENCH
+         ========================================== -->
+    <div class="lightslit"></div>
+    <section id="snag-bench">
+        <div class="container">
+            <div class="sec-label fade-in"><span class="sec-num">03</span>SNAG BENCH</div>
+            <div class="bench-intro fade-in d1">
+                <p>The open scoring standard for temporal reasoning.</p>
+                <p style="margin-top: 1.5rem;">Every AI benchmark eventually leaks into training data. SNAG Bench can't — because half of it is the future and the other half requires running live simulations that produce different results every time.</p>
+            </div>
+
+            <div class="fade-in d2">
+                <p style="font-size: 0.88rem; color: var(--marble); margin-bottom: 0.75rem;">Every SNAG Bench score is a triple:</p>
+                <div class="bench-triple">(model, task, score)</div>
+                <p style="font-size: 0.85rem; color: var(--marble); line-height: 1.75;">An RDF-like triple. Model X scored Y on task Z. Triples are published, aggregated, and ranked. Anyone can submit. Anyone can verify. The scoring rubrics are the existing Timepoint engines.</p>
+            </div>
+
+            <!-- Four axes -->
+            <div class="bench-axes fade-in d3">
+                <div class="bench-axis">
+                    <div class="bench-axis-head">
+                        <span class="bench-axis-num">AXIS 1</span>
+                        <span class="bench-axis-name">Grounding Fidelity</span>
+                    </div>
+                    <div class="bench-axis-scored">Scored by Flash</div>
+                    <p>Can the model produce historically accurate scenes? Flash's Grounding Agent verifies factual claims against Google Search. The Critique Agent checks for anachronisms, cultural errors, modern idioms.</p>
+                    <div class="bench-metric">Metric: Grounding Survival Rate (GSR) — % of claims that survive verification</div>
+                    <p>Task set: curated historical queries at three difficulty tiers (well-documented / sparse / adversarial).</p>
+                </div>
+
+                <div class="bench-axis">
+                    <div class="bench-axis-head">
+                        <span class="bench-axis-num">AXIS 2</span>
+                        <span class="bench-axis-name">Temporal Coherence</span>
+                    </div>
+                    <div class="bench-axis-scored">Scored by Daedalus</div>
+                    <p>Can the model maintain consistent social dynamics across time? Run Daedalus templates with the target model as the generation backend. Score entity consistency, causal validity, knowledge boundaries, voice distinctiveness.</p>
+                    <div class="bench-metric">Metric: Temporal Coherence Score (TCS) — composite across all dimensions</div>
+                    <p>Run the same scenario 5x and measure convergence (Jaccard on causal graphs). Task set at three scales: 4 entities/10tp, 8/20, 15+/50+.</p>
+                </div>
+
+                <div class="bench-axis">
+                    <div class="bench-axis-head">
+                        <span class="bench-axis-num">AXIS 3</span>
+                        <span class="bench-axis-name">Predictive Precision</span>
+                    </div>
+                    <div class="bench-axis-scored">Scored by Proteus</div>
+                    <p>Can the model predict real-world language output? Proteus markets resolve on-chain with Levenshtein distance. Weight scales linearly with market size — bigger stakes, bigger benchmark credit.</p>
+                    <div class="bench-metric">Metric: Mean Normalized Edit Distance (MNED) — lower is better</div>
+                    <p>Markets stratified: predictable speakers / unpredictable / null prediction / temporal windows. The test set is the future. Cannot leak. Cannot be gamed. Refreshes with every resolution.</p>
+                </div>
+
+                <div class="bench-axis">
+                    <div class="bench-axis-head">
+                        <span class="bench-axis-num">AXIS 4</span>
+                        <span class="bench-axis-name">Human Judgment</span>
+                    </div>
+                    <div class="bench-axis-scored">Scored by Flash + Human Raters</div>
+                    <p>Are the generated scenes convincing to humans? Flash generates scenes with images. Humans rate: historical plausibility, atmospheric quality, character believability, image fidelity.</p>
+                    <div class="bench-metric">Metric: Human Temporal Plausibility (HTP) — mean human rating</div>
+                    <p>The only axis that requires human evaluators. All others are automated. Community-sourced: anyone can rate scenes on the SNAG Bench website.</p>
+                </div>
+            </div>
+
+            <!-- Leaderboard -->
+            <div class="leaderboard fade-in d4">
+                <div class="leaderboard-title">SNAG Bench — Live Leaderboard</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>GSR <span class="lb-dir">(Flash)</span></th>
+                            <th>TCS <span class="lb-dir">(Daedalus)</span></th>
+                            <th>MNED <span class="lb-dir">(Proteus)</span></th>
+                            <th>HTP <span class="lb-dir">(Human)</span></th>
+                            <th>Composite</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="6" class="lb-coming">Coming soon — submit your model</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="bench-why fade-in d5">
+                <p>SNAG Bench doesn't run your model for you. It's a <strong>scoring paradigm</strong>, not a batch processor. You run your model against the task sets, submit your triples, and the leaderboard ranks you. The scoring rubrics are open source (they're Flash and Daedalus). The Proteus axis scores itself on-chain. The human axis scores itself through community participation.</p>
+                <p style="margin-top: 1rem;">This means SNAG Bench scales without Timepoint doing any work. As more people submit results, the benchmark gets richer. As more Proteus markets resolve, Axis 3 gets more data. As more humans rate scenes, Axis 4 gets more signal. The benchmark grows itself.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         04 — USE CASES
+         ========================================== -->
+    <div class="lightslit"></div>
+    <section id="use-cases">
+        <div class="container">
+            <div class="sec-label fade-in"><span class="sec-num">04</span>WHO USES THIS</div>
+            <table class="usecases fade-in d1">
+                <thead>
+                    <tr>
+                        <th>Use Case</th>
+                        <th>How</th>
+                        <th>Products</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ML Training Data</td>
+                        <td>Daedalus generates structured JSONL with causal provenance for fine-tuning temporal reasoning</td>
+                        <td>Daedalus</td>
+                    </tr>
+                    <tr>
+                        <td>Historical Education</td>
+                        <td>Students interrogate characters in Flash-generated scenes. Ask Caesar what he had for breakfast.</td>
+                        <td>Flash</td>
+                    </tr>
+                    <tr>
+                        <td>Corporate Strategy</td>
+                        <td>PORTAL backward-reasons from target outcomes. Run board scenarios 200 times.</td>
+                        <td>Daedalus</td>
+                    </tr>
+                    <tr>
+                        <td>Litigation Support</td>
+                        <td>Reconstruct "what happened and when" with scored causal chains and competing theories</td>
+                        <td>Daedalus, Flash</td>
+                    </tr>
+                    <tr>
+                        <td>Museum Installations</td>
+                        <td>Immersive temporal experiences — walk into Trinity, 5:29 AM, and talk to Oppenheimer</td>
+                        <td>Flash, PORTALS</td>
+                    </tr>
+                    <tr>
+                        <td>AI Model Evaluation</td>
+                        <td>SNAG Bench scores any model on grounding, coherence, prediction, and human judgment</td>
+                        <td>SNAG Bench</td>
+                    </tr>
+                    <tr>
+                        <td>Game &amp; Film Worldbuilding</td>
+                        <td>Historically grounded characters, dialog, and worlds with full relationship graphs</td>
+                        <td>Flash, Daedalus</td>
+                    </tr>
+                    <tr>
+                        <td>Insurance Investigation</td>
+                        <td>Run causal chains backward from loss events. Score competing explanations.</td>
+                        <td>Daedalus PORTAL</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         05 — THE VISION
+         ========================================== -->
+    <div class="lightslit"></div>
+    <section id="vision">
+        <div class="container">
+            <div class="sec-label fade-in"><span class="sec-num">05</span>THE VISION</div>
+            <div class="vision fade-in d1">
+                <div class="vision-row">
+                    <div class="vision-tag">TODAY</div>
+                    <p>Render any moment. Simulate any social system. Score temporal reasoning with SNAG Bench. Generate training data with full causal provenance.</p>
+                </div>
+                <div class="vision-row">
+                    <div class="vision-tag">THE CLOCKCHAIN</div>
+                    <p>Every scene Flash generates, every causal chain Daedalus traces, every Proteus market that resolves adds a node to a growing temporal knowledge graph — <strong>a continuously refined, probabilistically scored reconstruction of human history as dialog.</strong> Not an encyclopedia. A <em>ledger of temporal truth</em> with confidence scores, source links, and competing interpretations at every node.</p>
+                </div>
+                <div class="vision-row">
+                    <div class="vision-tag">PORTALS™</div>
+                    <p>In the immersive VR era, these reconstructions become places you inhabit. Walk into any moment. Talk to anyone who was there. The simulation is the destination.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         06 — OPEN SOURCE
+         ========================================== -->
+    <div class="lightslit"></div>
+    <section id="open-source">
+        <div class="container">
+            <div class="sec-label fade-in"><span class="sec-num">06</span>OPEN SOURCE</div>
+            <p class="oss-note fade-in d1">All core engines are open source (Apache 2.0). We build in public.</p>
+            <div class="repo-grid">
+                <a href="https://github.com/timepoint-ai/timepoint-flash" class="repo fade-in d1">
+                    <div class="repo-name">timepoint-flash</div>
+                    <div class="repo-desc">Scene generation engine (14 agents, Google Search grounding)</div>
+                </a>
+                <a href="https://github.com/timepoint-ai/timepoint-daedalus" class="repo fade-in d2">
+                    <div class="repo-name">timepoint-daedalus</div>
+                    <div class="repo-desc">SNAG engine, social simulation, training data synthesis</div>
+                </a>
+                <a href="https://github.com/timepoint-ai/proteus" class="repo fade-in d3">
+                    <div class="repo-name">timepoint-proteus</div>
+                    <div class="repo-desc">Prediction markets for AI agents (BASE)</div>
+                </a>
+                <a href="https://github.com/timepoint-ai/timepoint-synthesizer" class="repo fade-in d4">
+                    <div class="repo-name">timepoint-synthesizer</div>
+                    <div class="repo-desc">Waveform control for entity state parameters</div>
+                </a>
+                <div class="repo fade-in d5">
+                    <div class="repo-name">snag-bench <span class="repo-coming">coming soon</span></div>
+                    <div class="repo-desc">Scoring standard for temporal reasoning</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         07 — GET STARTED
          ========================================== -->
     <div class="lightslit"></div>
     <section id="quickstart">
         <div class="container">
-            <div class="sec-label fade-in"><span class="sec-num">03</span>GET STARTED</div>
+            <div class="sec-label fade-in"><span class="sec-num">07</span>GET STARTED</div>
 
             <div class="quickstart-grid">
 
@@ -1119,51 +1741,16 @@
     </section>
 
     <!-- ==========================================
-         THE VISION
+         CLOSING
          ========================================== -->
     <div class="lightslit"></div>
-    <section id="vision">
+    <section class="coda">
         <div class="container">
-            <div class="sec-label fade-in"><span class="sec-num">04</span>THE VISION</div>
-            <div class="vision fade-in d1">
-                <div class="vision-row">
-                    <div class="vision-tag">TODAY</div>
-                    <p>Render any moment. Simulate any social system. Score predictions at character-level precision.</p>
-                </div>
-                <div class="vision-row">
-                    <div class="vision-tag">TOMORROW</div>
-                    <p><strong>PORTALS™</strong> — immersive interactive environments where these simulations become places you inhabit, not just read. In the coming VR era, Synthetic Time Travel™ becomes a destination.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ==========================================
-         OPEN SOURCE
-         ========================================== -->
-    <div class="lightslit"></div>
-    <section id="open-source">
-        <div class="container">
-            <div class="sec-label fade-in"><span class="sec-num">05</span>OPEN SOURCE</div>
-            <p class="oss-note fade-in d1">All core engines are open source (Apache 2.0). We build in public.</p>
-            <div class="repo-grid">
-                <a href="https://github.com/timepoint-ai/timepoint-flash" class="repo fade-in d1">
-                    <div class="repo-name">timepoint-flash</div>
-                    <div class="repo-desc">Scene generation engine</div>
-                </a>
-                <a href="https://github.com/timepoint-ai/timepoint-daedalus" class="repo fade-in d2">
-                    <div class="repo-name">timepoint-daedalus</div>
-                    <div class="repo-desc">SNAG engine / social simulation</div>
-                </a>
-                <a href="https://github.com/timepoint-ai/proteus" class="repo fade-in d3">
-                    <div class="repo-name">timepoint-proteus</div>
-                    <div class="repo-desc">Text prediction markets (BASE)</div>
-                </a>
-                <a href="https://github.com/timepoint-ai/timepoint-synthesizer" class="repo fade-in d4">
-                    <div class="repo-name">timepoint-synthesizer</div>
-                    <div class="repo-desc">Waveform control system</div>
-                </a>
-            </div>
+            <blockquote class="fade-in">
+                <p>History is not dead — it is merely unseen.</p>
+                <p>We are building the instruments to see it.</p>
+                <div class="coda-arriving fade-in d1">TIMEPOINT IS ARRIVING.</div>
+            </blockquote>
         </div>
     </section>
 
@@ -1179,6 +1766,7 @@
                 <a href="https://x.com/seanmcdonaldxyz">X</a>
                 <a href="mailto:info@timepointai.com">info@timepointai.com</a>
             </div>
+            <div class="foot-copy">&copy; 2026 Timepoint AI. Synthetic Time Travel is a trademark of Timepoint AI.</div>
         </div>
     </footer>
 
