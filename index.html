@@ -28,39 +28,27 @@
            Boullée × Dune × Cellarius × Mission Control.
            ============================================ */
         :root {
-            /* Primary — 80% void */
             --void:         #050505;
             --void-near:    #080808;
             --void-mid:     #0b0b0e;
             --void-far:     #0f1020;
             --indigo:       #0F1C2E;
-
-            /* Patinated Gold spectrum */
             --gold:         #BFA46F;
             --gold-bright:  #D4AF37;
             --gold-dim:     #8a7033;
             --gold-ghost:   rgba(191, 164, 111, 0.07);
             --gold-glow:    rgba(191, 164, 111, 0.15);
             --gold-glow-hot:rgba(212, 175, 55, 0.35);
-
-            /* Secondaries */
             --amber:        #E8C9A0;
             --marble:       #A89F91;
             --selenite:     #F5F0E6;
             --selenite-dim: rgba(245, 240, 230, 0.06);
-
-            /* Functional */
             --terminal-bg:  #040405;
-
-            /* Type stacks */
             --display:  'Cinzel', 'Trajan Pro', Georgia, serif;
             --sans:     'Inter', -apple-system, 'Segoe UI', sans-serif;
             --mono:     'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
         }
 
-        /* ============================================
-           Reset
-           ============================================ */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
         body {
@@ -76,31 +64,17 @@
         a:hover { color: var(--gold-bright); }
         ::selection { background: var(--gold-glow-hot); color: var(--selenite); }
 
-        /* ============================================
-           Animations — slow, imperial patience
-           ============================================ */
+        /* Animations */
         @keyframes pulse-ring {
             0%, 100% { opacity: 0.08; transform: scale(1); }
             50%      { opacity: 0.18; transform: scale(1.015); }
-        }
-        @keyframes drift-light {
-            0%   { transform: translateY(100%) scaleY(0.5); opacity: 0; }
-            15%  { opacity: 0.15; }
-            85%  { opacity: 0.08; }
-            100% { transform: translateY(-100%) scaleY(0.5); opacity: 0; }
         }
         @keyframes glow-breathe {
             0%, 100% { opacity: 0.4; }
             50%      { opacity: 0.7; }
         }
-        @keyframes flow-pulse {
-            0%, 100% { opacity: 0.3; }
-            50%      { opacity: 1; }
-        }
 
-        /* ============================================
-           Background — 1-2% noise, slow light-streak
-           ============================================ */
+        /* Background noise + light column */
         body::before {
             content: '';
             position: fixed;
@@ -109,7 +83,6 @@
             pointer-events: none;
             z-index: 0;
         }
-        /* Vertical light column — Cathedral of Light technique */
         body::after {
             content: '';
             position: fixed;
@@ -117,65 +90,28 @@
             left: 50%;
             width: 1px;
             height: 100vh;
-            background: linear-gradient(
-                180deg,
-                transparent 0%,
-                rgba(191, 164, 111, 0.06) 30%,
-                rgba(191, 164, 111, 0.03) 70%,
-                transparent 100%
-            );
+            background: linear-gradient(180deg, transparent 0%, rgba(191, 164, 111, 0.06) 30%, rgba(191, 164, 111, 0.03) 70%, transparent 100%);
             pointer-events: none;
             z-index: 0;
         }
 
-        /* ============================================
-           Layout
-           ============================================ */
-        .container {
-            max-width: 880px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            position: relative;
-            z-index: 1;
-        }
+        /* Layout */
+        .container { max-width: 880px; margin: 0 auto; padding: 0 2rem; position: relative; z-index: 1; }
         section { padding: 8rem 0; position: relative; }
 
-        /* ============================================
-           Light-slit dividers — Ando concrete + light
-           ============================================ */
+        /* Light-slit dividers */
         .lightslit {
-            position: relative;
-            height: 1px;
-            max-width: 500px;
-            margin: 0 auto;
-            background: linear-gradient(
-                90deg,
-                transparent 0%,
-                rgba(191, 164, 111, 0.15) 25%,
-                rgba(212, 175, 55, 0.3) 50%,
-                rgba(191, 164, 111, 0.15) 75%,
-                transparent 100%
-            );
+            position: relative; height: 1px; max-width: 500px; margin: 0 auto;
+            background: linear-gradient(90deg, transparent 0%, rgba(191, 164, 111, 0.15) 25%, rgba(212, 175, 55, 0.3) 50%, rgba(191, 164, 111, 0.15) 75%, transparent 100%);
         }
         .lightslit::after {
-            content: '';
-            position: absolute;
-            top: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 17px;
+            content: ''; position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+            width: 100px; height: 17px;
             background: radial-gradient(ellipse at center, rgba(212, 175, 55, 0.08) 0%, transparent 70%);
         }
 
-        /* ============================================
-           Fade-in on scroll
-           ============================================ */
-        .fade-in {
-            opacity: 0;
-            transform: translateY(16px);
-            transition: opacity 1s ease, transform 1s ease;
-        }
+        /* Fade-in */
+        .fade-in { opacity: 0; transform: translateY(16px); transition: opacity 1s ease, transform 1s ease; }
         .fade-in.visible { opacity: 1; transform: translateY(0); }
         .d1 { transition-delay: 0.12s; }
         .d2 { transition-delay: 0.24s; }
@@ -184,1025 +120,371 @@
         .d5 { transition-delay: 0.60s; }
 
         /* ============================================
-           HERO — Boullée's Cenotaph for Newton
+           HERO
            ============================================ */
         .hero {
-            position: relative;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            background: var(--void);
+            position: relative; min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; background: var(--void);
         }
         .hero-orrery {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 800px;
-            height: 800px;
-            pointer-events: none;
-            z-index: 0;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 800px; height: 800px; pointer-events: none; z-index: 0;
         }
-        .orrery-ring {
-            position: absolute;
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        .orrery-ring:nth-child(1) {
-            width: 240px; height: 240px;
-            border: 1px solid rgba(191, 164, 111, 0.06);
-            animation: pulse-ring 10s ease infinite;
-        }
-        .orrery-ring:nth-child(2) {
-            width: 420px; height: 420px;
-            border: 1px solid rgba(191, 164, 111, 0.04);
-            animation: pulse-ring 14s ease infinite 3s;
-        }
-        .orrery-ring:nth-child(3) {
-            width: 640px; height: 640px;
-            border: 1px solid rgba(191, 164, 111, 0.025);
-            animation: pulse-ring 18s ease infinite 6s;
-        }
+        .orrery-ring { position: absolute; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .orrery-ring:nth-child(1) { width: 240px; height: 240px; border: 1px solid rgba(191, 164, 111, 0.06); animation: pulse-ring 10s ease infinite; }
+        .orrery-ring:nth-child(2) { width: 420px; height: 420px; border: 1px solid rgba(191, 164, 111, 0.04); animation: pulse-ring 14s ease infinite 3s; }
+        .orrery-ring:nth-child(3) { width: 640px; height: 640px; border: 1px solid rgba(191, 164, 111, 0.025); animation: pulse-ring 18s ease infinite 6s; }
         .orrery-node {
-            position: absolute;
-            width: 3px;
-            height: 3px;
-            background: var(--gold);
-            border-radius: 50%;
-            box-shadow: 0 0 6px var(--gold-glow-hot);
-            top: 50%;
-            left: 50%;
-            transform: translate(210px, 0);
-            animation: glow-breathe 4s ease infinite;
+            position: absolute; width: 3px; height: 3px;
+            background: var(--gold); border-radius: 50%; box-shadow: 0 0 6px var(--gold-glow-hot);
+            top: 50%; left: 50%; transform: translate(210px, 0); animation: glow-breathe 4s ease infinite;
         }
         .hero-godray {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(
-                circle at center,
-                rgba(212, 175, 55, 0.04) 0%,
-                rgba(212, 175, 55, 0.01) 30%,
-                transparent 60%
-            );
-            pointer-events: none;
-            z-index: 0;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 600px; height: 600px;
+            background: radial-gradient(circle at center, rgba(212, 175, 55, 0.04) 0%, rgba(212, 175, 55, 0.01) 30%, transparent 60%);
+            pointer-events: none; z-index: 0;
         }
         .hero-bg {
-            position: absolute;
-            inset: 0;
+            position: absolute; inset: 0;
             background: url('docs/images/alphago-move37.jpeg') center/cover no-repeat;
             filter: brightness(0.08) saturate(0.2) contrast(1.1);
             z-index: 0;
         }
         .hero-vignette {
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(
-                ellipse 55% 55% at 50% 50%,
-                transparent 0%,
-                var(--void) 100%
-            );
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse 55% 55% at 50% 50%, transparent 0%, var(--void) 100%);
             z-index: 1;
         }
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            text-align: center;
-            max-width: 720px;
-            padding: 2rem;
-        }
+        .hero-content { position: relative; z-index: 2; text-align: center; max-width: 720px; padding: 2rem; }
         .hero-mark {
-            font-family: var(--mono);
-            font-size: 0.65rem;
-            font-weight: 500;
-            letter-spacing: 0.5em;
+            font-family: var(--display);
+            font-size: clamp(1.1rem, 3vw, 1.6rem);
+            font-weight: 700;
+            letter-spacing: 0.35em;
             text-transform: uppercase;
-            color: var(--gold-dim);
-            margin-bottom: 3rem;
+            color: var(--gold);
+            margin-bottom: 1.5rem;
         }
         .hero h1 {
             font-family: var(--display);
             font-size: clamp(2.4rem, 7vw, 4.5rem);
-            font-weight: 700;
-            line-height: 1.15;
+            font-weight: 700; line-height: 1.15;
             color: var(--selenite);
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
+            letter-spacing: 0.08em; text-transform: uppercase;
             margin-bottom: 2rem;
         }
-        .hero h1 .tm {
-            font-size: 0.3em;
-            vertical-align: super;
-            color: var(--gold-dim);
-            font-weight: 400;
-            letter-spacing: 0;
-        }
+        .hero h1 .tm { font-size: 0.3em; vertical-align: super; color: var(--gold-dim); font-weight: 400; letter-spacing: 0; }
         .hero-sub {
-            font-family: var(--sans);
-            font-size: clamp(0.9rem, 1.8vw, 1.05rem);
-            font-weight: 300;
-            color: var(--marble);
-            line-height: 1.9;
-            margin-bottom: 3.5rem;
-            max-width: 480px;
-            margin-left: auto;
-            margin-right: auto;
+            font-family: var(--sans); font-size: clamp(0.9rem, 1.8vw, 1.05rem);
+            font-weight: 300; color: var(--marble); line-height: 1.9;
+            margin-bottom: 3rem; max-width: 480px; margin-left: auto; margin-right: auto;
         }
-        .scrubber {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0;
-            margin-bottom: 3.5rem;
+
+        /* Timeline scrubber with branching future */
+        .scrubber { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 3rem; }
+        .scrub-seg { height: 1px; width: 40px; background: linear-gradient(90deg, transparent, rgba(191, 164, 111, 0.2), transparent); }
+        .scrub-node { width: 5px; height: 5px; border: 1px solid rgba(191, 164, 111, 0.25); border-radius: 50%; margin: 0 3px; }
+        .scrub-node.active { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 10px var(--gold-glow-hot); }
+        .scrub-label { font-family: var(--mono); font-size: 0.55rem; color: rgba(191, 164, 111, 0.3); letter-spacing: 0.15em; margin: 0 5px; }
+        .scrub-label.now { color: var(--gold); }
+        .scrub-branch {
+            display: flex; flex-direction: column; gap: 3px; margin-left: 2px; position: relative;
         }
-        .scrub-seg {
-            height: 1px;
-            width: 50px;
-            background: linear-gradient(90deg, transparent, rgba(191, 164, 111, 0.2), transparent);
+        .branch-line {
+            height: 1px; width: 60px;
+            background: linear-gradient(90deg, rgba(191, 164, 111, 0.15), transparent);
         }
-        .scrub-node {
-            width: 5px;
-            height: 5px;
-            border: 1px solid rgba(191, 164, 111, 0.25);
-            border-radius: 50%;
-            margin: 0 3px;
+        .branch-line:nth-child(1) { transform: rotate(-12deg); transform-origin: left center; }
+        .branch-line:nth-child(2) { transform: rotate(-4deg); transform-origin: left center; }
+        .branch-line.optimal {
+            height: 1px; width: 80px;
+            background: linear-gradient(90deg, var(--gold), rgba(212, 175, 55, 0.3), transparent);
+            transform: rotate(0deg);
         }
-        .scrub-node.active {
-            background: var(--gold);
-            border-color: var(--gold);
-            box-shadow: 0 0 10px var(--gold-glow-hot);
-        }
-        .scrub-label {
-            font-family: var(--mono);
-            font-size: 0.55rem;
-            color: rgba(191, 164, 111, 0.3);
-            letter-spacing: 0.15em;
-            margin: 0 5px;
-        }
+        .branch-line:nth-child(4) { transform: rotate(4deg); transform-origin: left center; }
+        .branch-line:nth-child(5) { transform: rotate(12deg); transform-origin: left center; }
+
+        .hero-ctas { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
         .cta {
-            display: inline-block;
-            font-family: var(--mono);
-            font-size: 0.7rem;
-            font-weight: 500;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
+            display: inline-block; font-family: var(--mono);
+            font-size: 0.7rem; font-weight: 500;
+            letter-spacing: 0.25em; text-transform: uppercase;
             color: var(--gold);
             border: 1px solid rgba(191, 164, 111, 0.25);
-            padding: 1rem 2.8rem;
-            transition: all 0.4s;
+            padding: 1rem 2.8rem; transition: all 0.4s;
         }
-        .cta:hover {
-            background: var(--gold);
-            color: var(--void);
-            border-color: var(--gold);
-            box-shadow: 0 0 40px rgba(212, 175, 55, 0.15);
+        .cta:hover { background: var(--gold); color: var(--void); border-color: var(--gold); box-shadow: 0 0 40px rgba(212, 175, 55, 0.15); }
+        .cta-secondary {
+            display: inline-block; font-family: var(--mono);
+            font-size: 0.6rem; font-weight: 500;
+            letter-spacing: 0.2em; text-transform: uppercase;
+            color: var(--gold-dim); transition: color 0.3s;
         }
+        .cta-secondary:hover { color: var(--gold); }
 
         /* ============================================
-           Section labels — Aicher systematic grid
+           Section labels
            ============================================ */
-        .sec-label {
-            font-family: var(--mono);
-            font-size: 0.6rem;
-            font-weight: 500;
-            letter-spacing: 0.4em;
-            text-transform: uppercase;
-            color: var(--gold-dim);
-            margin-bottom: 1rem;
-        }
-        .sec-num {
-            color: rgba(191, 164, 111, 0.15);
-            margin-right: 1.2em;
-        }
+        .sec-label { font-family: var(--mono); font-size: 0.6rem; font-weight: 500; letter-spacing: 0.4em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 1rem; }
+        .sec-num { color: rgba(191, 164, 111, 0.15); margin-right: 1.2em; }
 
         /* ============================================
-           THE SYSTEM — manifesto + flow diagram
+           THE SYSTEM
            ============================================ */
-        .manifesto {
-            max-width: 620px;
-        }
-        .manifesto p {
-            font-family: var(--sans);
-            font-size: clamp(1rem, 2vw, 1.12rem);
-            font-weight: 300;
-            line-height: 2;
-            color: var(--marble);
-        }
-        .manifesto strong {
-            color: var(--selenite);
-            font-weight: 500;
-        }
+        .manifesto { max-width: 620px; }
+        .manifesto p { font-family: var(--sans); font-size: clamp(1rem, 2vw, 1.12rem); font-weight: 300; line-height: 2; color: var(--marble); }
+        .manifesto strong { color: var(--selenite); font-weight: 500; }
 
-        /* System flow diagram */
         .system-flow {
-            margin: 3.5rem 0 1rem;
-            padding: 2.5rem 2rem;
-            background: var(--void-near);
-            border: 1px solid rgba(191, 164, 111, 0.04);
-            position: relative;
-            overflow: hidden;
+            margin: 3.5rem 0 1rem; padding: 2.5rem 2rem;
+            background: var(--void-near); border: 1px solid rgba(191, 164, 111, 0.04);
+            position: relative; overflow: hidden;
         }
-        .system-flow::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 10%;
-            right: 10%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.2), transparent);
-        }
-        .system-flow-step {
-            display: flex;
-            align-items: flex-start;
-            gap: 1.25rem;
-            margin-bottom: 1.75rem;
-        }
+        .system-flow::before { content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px; background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.2), transparent); }
+        .system-flow-step { display: flex; align-items: flex-start; gap: 1.25rem; margin-bottom: 1.75rem; }
         .system-flow-step:last-child { margin-bottom: 0; }
         .system-flow-node {
-            flex-shrink: 0;
-            width: 36px;
-            height: 36px;
-            border: 1px solid rgba(191, 164, 111, 0.15);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
+            flex-shrink: 0; width: 36px; height: 36px;
+            border: 1px solid rgba(191, 164, 111, 0.15); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; position: relative;
         }
-        .system-flow-node::after {
-            content: '';
-            position: absolute;
-            top: 36px;
-            left: 50%;
-            width: 1px;
-            height: calc(100% + 1.75rem);
-            background: linear-gradient(180deg, rgba(191, 164, 111, 0.15), transparent);
-        }
+        .system-flow-node::after { content: ''; position: absolute; top: 36px; left: 50%; width: 1px; height: calc(100% + 1.75rem); background: linear-gradient(180deg, rgba(191, 164, 111, 0.15), transparent); }
         .system-flow-step:last-child .system-flow-node::after { display: none; }
-        .system-flow-dot {
-            width: 4px;
-            height: 4px;
-            background: var(--gold);
-            border-radius: 50%;
-            box-shadow: 0 0 6px var(--gold-glow-hot);
-        }
-        .system-flow-text {
-            padding-top: 0.4rem;
-        }
-        .system-flow-name {
-            font-family: var(--display);
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--selenite);
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            margin-bottom: 0.25rem;
-        }
-        .system-flow-desc {
-            font-size: 0.85rem;
-            color: var(--marble);
-            line-height: 1.7;
-        }
-        .system-flow-desc strong {
-            color: var(--selenite);
-            font-weight: 500;
-        }
+        .system-flow-dot { width: 4px; height: 4px; background: var(--gold); border-radius: 50%; box-shadow: 0 0 6px var(--gold-glow-hot); }
+        .system-flow-text { padding-top: 0.4rem; }
+        .system-flow-name { font-family: var(--display); font-size: 0.9rem; font-weight: 600; color: var(--selenite); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.25rem; }
+        .system-flow-desc { font-size: 0.85rem; color: var(--marble); line-height: 1.7; }
+        .system-flow-desc strong { color: var(--selenite); font-weight: 500; }
+        .system-flow-desc em { color: var(--amber); font-style: italic; }
+        .system-flow-link { font-family: var(--mono); font-size: 0.65rem; color: var(--gold-dim); margin-top: 0.4rem; display: inline-block; }
+        .system-flow-link:hover { color: var(--gold); }
 
-        /* System loop closer */
-        .system-loop {
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(191, 164, 111, 0.04);
+        .system-loop { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(191, 164, 111, 0.04); }
+        .system-loop p { font-size: 0.88rem; color: var(--marble); line-height: 1.85; }
+        .system-loop strong { color: var(--selenite); font-weight: 500; }
+        .system-loop em { color: var(--amber); font-style: italic; }
+
+        .clockchain-callout {
+            margin-top: 1.5rem; padding: 1.25rem 1.5rem;
+            background: var(--void); border: 1px solid rgba(191, 164, 111, 0.06);
+            border-left: 2px solid var(--gold-dim);
         }
-        .system-loop p {
-            font-size: 0.88rem;
-            color: var(--marble);
-            line-height: 1.85;
-        }
-        .system-loop strong {
-            color: var(--selenite);
-            font-weight: 500;
-        }
-        .system-loop em {
-            color: var(--amber);
-            font-style: italic;
-        }
+        .clockchain-callout p { font-size: 0.82rem; color: var(--marble); line-height: 1.75; }
+        .clockchain-callout a { color: var(--gold); }
 
         /* ============================================
-           Product cards — Ferriss charcoal monoliths
+           Product cards
            ============================================ */
         .product {
-            background: var(--void-near);
-            border: 1px solid rgba(191, 164, 111, 0.04);
-            padding: 2.5rem 2.5rem 2rem;
-            margin-bottom: 3.5rem;
-            position: relative;
-            overflow: hidden;
+            background: var(--void-near); border: 1px solid rgba(191, 164, 111, 0.04);
+            padding: 2.5rem 2.5rem 2rem; margin-bottom: 3.5rem;
+            position: relative; overflow: hidden;
         }
-        .product::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 10%;
-            right: 10%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.2), transparent);
-        }
-        .product:hover {
-            border-color: rgba(191, 164, 111, 0.1);
-        }
-        .product-head {
-            display: flex;
-            align-items: baseline;
-            gap: 1rem;
-            margin-bottom: 0.3rem;
-            flex-wrap: wrap;
-        }
-        .product-name {
-            font-family: var(--display);
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: var(--selenite);
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-        }
-        .product-badge {
-            font-family: var(--mono);
-            font-size: 0.55rem;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: var(--gold);
-            border: 1px solid rgba(191, 164, 111, 0.15);
-            padding: 0.2rem 0.5rem;
-        }
-        .product-sub {
-            font-family: var(--mono);
-            font-size: 0.65rem;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: var(--gold-dim);
-            margin-bottom: 1.5rem;
-        }
-        .product p {
-            font-size: 0.9rem;
-            color: var(--marble);
-            margin-bottom: 1rem;
-            line-height: 1.8;
-        }
-        .product p strong {
-            color: var(--selenite);
-            font-weight: 500;
-        }
-        .product p em {
-            color: var(--amber);
-            font-style: italic;
-        }
-        .product-stats {
-            font-family: var(--mono);
-            font-size: 0.68rem;
-            color: var(--gold-dim);
-            padding-top: 1.25rem;
-            margin-top: 1.5rem;
-            border-top: 1px solid rgba(191, 164, 111, 0.04);
-            letter-spacing: 0.03em;
-        }
-        .product-repo {
-            display: inline-block;
-            font-family: var(--mono);
-            font-size: 0.72rem;
-            margin-top: 0.75rem;
-            color: var(--gold);
-        }
+        .product::before { content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px; background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.2), transparent); }
+        .product:hover { border-color: rgba(191, 164, 111, 0.1); }
+        .product-head { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 0.3rem; flex-wrap: wrap; }
+        .product-name { font-family: var(--display); font-size: 1.4rem; font-weight: 600; color: var(--selenite); letter-spacing: 0.12em; text-transform: uppercase; }
+        .product-badge { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(191, 164, 111, 0.15); padding: 0.2rem 0.5rem; }
+        .product-sub { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 1.5rem; }
+        .product p { font-size: 0.9rem; color: var(--marble); margin-bottom: 1rem; line-height: 1.8; }
+        .product p strong { color: var(--selenite); font-weight: 500; }
+        .product p em { color: var(--amber); font-style: italic; }
+        .product-stats { font-family: var(--mono); font-size: 0.68rem; color: var(--gold-dim); padding-top: 1.25rem; margin-top: 1.5rem; border-top: 1px solid rgba(191, 164, 111, 0.04); letter-spacing: 0.03em; }
+        .product-repo { display: inline-block; font-family: var(--mono); font-size: 0.72rem; margin-top: 0.75rem; color: var(--gold); }
         .product-repo::before { content: '> '; opacity: 0.3; }
+
+        .product-demo {
+            display: inline-block; font-family: var(--mono); font-size: 0.65rem; font-weight: 500;
+            letter-spacing: 0.2em; text-transform: uppercase; color: var(--void);
+            background: var(--gold); padding: 0.6rem 1.5rem; margin-top: 1rem; margin-right: 1rem;
+            transition: all 0.3s;
+        }
+        .product-demo:hover { background: var(--gold-bright); color: var(--void); box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
 
         /* In SNAG Bench callout */
         .product-bench {
-            margin-top: 1.5rem;
-            padding: 1.25rem 1.5rem;
-            background: var(--void);
-            border: 1px solid rgba(191, 164, 111, 0.06);
+            margin-top: 1.5rem; padding: 1.25rem 1.5rem;
+            background: var(--void); border: 1px solid rgba(191, 164, 111, 0.06);
             border-left: 2px solid var(--gold-dim);
         }
-        .product-bench-label {
-            font-family: var(--mono);
-            font-size: 0.55rem;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            color: var(--gold);
-            margin-bottom: 0.5rem;
-        }
-        .product-bench p {
-            font-size: 0.82rem;
-            color: var(--marble);
-            line-height: 1.75;
-            margin-bottom: 0;
-        }
+        .product-bench-label { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.5rem; }
+        .product-bench p { font-size: 0.82rem; color: var(--marble); line-height: 1.75; margin-bottom: 0; }
 
-        /* Capabilities list — brass bullet points */
-        .caps {
-            list-style: none;
-            margin: 1.25rem 0 0;
-        }
-        .caps li {
-            font-size: 0.85rem;
-            color: var(--marble);
-            padding: 0.35rem 0 0.35rem 1.5rem;
-            position: relative;
-            line-height: 1.65;
-        }
-        .caps li::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0.85em;
-            width: 4px;
-            height: 4px;
-            background: var(--gold-dim);
-            border-radius: 50%;
-        }
+        .caps { list-style: none; margin: 1.25rem 0 0; }
+        .caps li { font-size: 0.85rem; color: var(--marble); padding: 0.35rem 0 0.35rem 1.5rem; position: relative; line-height: 1.65; }
+        .caps li::before { content: ''; position: absolute; left: 0; top: 0.85em; width: 4px; height: 4px; background: var(--gold-dim); border-radius: 50%; }
         .caps li strong { color: var(--selenite); font-weight: 500; }
 
-        /* Pipeline diagram — mission control readout */
-        .pipeline {
-            font-family: var(--mono);
-            font-size: 0.68rem;
-            line-height: 1.6;
-            color: var(--marble);
-            background: var(--void);
-            border: 1px solid rgba(191, 164, 111, 0.04);
-            padding: 1.25rem 1.5rem;
-            margin: 1.25rem 0;
-            white-space: pre;
-            overflow-x: auto;
-        }
+        .pipeline { font-family: var(--mono); font-size: 0.68rem; line-height: 1.6; color: var(--marble); background: var(--void); border: 1px solid rgba(191, 164, 111, 0.04); padding: 1.25rem 1.5rem; margin: 1.25rem 0; white-space: pre; overflow-x: auto; }
         .pipeline .node { color: var(--gold); }
         .pipeline .arrow { color: rgba(191, 164, 111, 0.3); }
         .pipeline .comment { color: var(--gold-dim); }
 
         /* ============================================
-           Scene cards — Criterion Collection precision
+           Scene cards
            ============================================ */
-        .scenes-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-            margin: 3rem 0 1rem;
-        }
-        .scene {
-            background: var(--void-mid);
-            border: 1px solid rgba(191, 164, 111, 0.05);
-            overflow: hidden;
-            transition: border-color 0.4s;
-        }
-        .scene:hover {
-            border-color: rgba(191, 164, 111, 0.15);
-        }
-        .scene-img {
-            width: 100%;
-            height: 260px;
-            object-fit: cover;
-            display: block;
-            filter: saturate(0.7) contrast(1.1) brightness(0.9);
-        }
+        .scenes-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin: 3rem 0 1rem; }
+        .scene { background: var(--void-mid); border: 1px solid rgba(191, 164, 111, 0.05); overflow: hidden; transition: border-color 0.4s; }
+        .scene:hover { border-color: rgba(191, 164, 111, 0.15); }
+        .scene-img { width: 100%; height: 260px; object-fit: cover; display: block; filter: saturate(0.7) contrast(1.1) brightness(0.9); }
         .scene-void {
-            width: 100%;
-            height: 180px;
-            background: var(--void);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
+            width: 100%; height: 180px; background: var(--void);
+            display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
         }
-        .scene-void::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent 15%, rgba(212, 175, 55, 0.15) 50%, transparent 85%);
+        .scene-void::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse at center, rgba(212, 175, 55, 0.03) 0%, transparent 70%);
         }
-        .scene-void-text {
-            font-family: var(--display);
-            font-size: 1.4rem;
-            font-weight: 400;
-            color: rgba(191, 164, 111, 0.1);
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            z-index: 1;
+        .scene-void::after { content: ''; position: absolute; width: 100%; height: 1px; background: linear-gradient(90deg, transparent 15%, rgba(212, 175, 55, 0.15) 50%, transparent 85%); }
+        .scene-void-text { font-family: var(--display); font-size: 1.4rem; font-weight: 400; color: rgba(191, 164, 111, 0.12); letter-spacing: 0.2em; text-transform: uppercase; z-index: 1; }
+        .scene-body { padding: 1.75rem 2rem; }
+        .scene-loc { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 0.2rem; }
+        .scene-date { font-family: var(--display); font-size: 0.95rem; font-weight: 400; color: var(--selenite); letter-spacing: 0.05em; margin-bottom: 1rem; }
+        .scene-dialog { padding-left: 1rem; border-left: 1px solid rgba(191, 164, 111, 0.1); }
+        .scene-dialog p { font-size: 0.85rem; color: var(--marble); margin-bottom: 0.5rem; line-height: 1.65; }
+        .scene-dialog .spk { font-weight: 500; color: var(--selenite); }
+        .scene-badge { font-family: var(--mono); font-size: 0.5rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold-dim); margin-top: 0.75rem; }
+
+        /* Daedalus example gallery */
+        .daedalus-gallery { margin: 3rem 0 1rem; }
+        .daedalus-gallery-title { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 1rem; }
+        .daedalus-examples { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+        .daedalus-ex {
+            background: var(--terminal-bg); border: 1px solid rgba(191, 164, 111, 0.05);
+            padding: 1.25rem 1.5rem; overflow-x: auto;
         }
-        .scene-body {
-            padding: 1.75rem 2rem;
-        }
-        .scene-loc {
-            font-family: var(--mono);
-            font-size: 0.6rem;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            color: var(--gold-dim);
-            margin-bottom: 0.2rem;
-        }
-        .scene-date {
-            font-family: var(--display);
-            font-size: 0.95rem;
-            font-weight: 400;
-            color: var(--selenite);
-            letter-spacing: 0.05em;
-            margin-bottom: 1rem;
-        }
-        .scene-dialog {
-            padding-left: 1rem;
-            border-left: 1px solid rgba(191, 164, 111, 0.1);
-        }
-        .scene-dialog p {
-            font-size: 0.85rem;
-            color: var(--marble);
-            margin-bottom: 0.5rem;
-            line-height: 1.65;
-        }
-        .scene-dialog .spk {
-            font-weight: 500;
-            color: var(--selenite);
-        }
-        .scene-dialog em {
-            color: var(--gold-dim);
-            font-style: italic;
-        }
+        .daedalus-ex-label { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.5rem; }
+        .daedalus-ex-scenario { font-family: var(--display); font-size: 0.85rem; font-weight: 600; color: var(--selenite); letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+        .daedalus-ex-meta { font-family: var(--mono); font-size: 0.65rem; color: var(--gold-dim); margin-bottom: 0.5rem; }
+        .daedalus-ex p { font-size: 0.78rem; color: var(--marble); line-height: 1.65; }
 
         /* ============================================
-           SNAG Bench section
+           SNAG Bench
            ============================================ */
-        .bench-intro {
-            max-width: 620px;
-            margin-bottom: 3rem;
-        }
-        .bench-intro p {
-            font-size: clamp(0.95rem, 2vw, 1.05rem);
-            color: var(--marble);
-            line-height: 1.9;
-            font-weight: 300;
-        }
-        .bench-intro strong {
-            color: var(--selenite);
-            font-weight: 500;
-        }
-
-        /* Triple format */
-        .bench-triple {
-            font-family: var(--mono);
-            font-size: 0.85rem;
-            color: var(--gold);
-            background: var(--void);
-            border: 1px solid rgba(191, 164, 111, 0.06);
-            padding: 1rem 1.5rem;
-            margin: 1.5rem 0 2.5rem;
-            text-align: center;
-            letter-spacing: 0.05em;
-        }
-
-        /* Axis cards */
-        .bench-axes {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
-        .bench-axis {
-            background: var(--void-near);
-            border: 1px solid rgba(191, 164, 111, 0.04);
-            padding: 2rem 2rem 1.75rem;
-            position: relative;
-            overflow: hidden;
-        }
-        .bench-axis::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 2px;
-            height: 100%;
-            background: linear-gradient(180deg, var(--gold-dim), transparent);
-        }
-        .bench-axis-head {
-            display: flex;
-            align-items: baseline;
-            gap: 0.75rem;
-            margin-bottom: 0.3rem;
-            flex-wrap: wrap;
-        }
-        .bench-axis-num {
-            font-family: var(--mono);
-            font-size: 0.55rem;
-            letter-spacing: 0.15em;
-            color: var(--gold);
-        }
-        .bench-axis-name {
-            font-family: var(--display);
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--selenite);
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-        .bench-axis-scored {
-            font-family: var(--mono);
-            font-size: 0.55rem;
-            letter-spacing: 0.1em;
-            color: var(--gold-dim);
-            margin-bottom: 1rem;
-        }
-        .bench-axis p {
-            font-size: 0.85rem;
-            color: var(--marble);
-            line-height: 1.75;
-            margin-bottom: 0.5rem;
-        }
-        .bench-axis strong {
-            color: var(--selenite);
-            font-weight: 500;
-        }
-        .bench-metric {
-            font-family: var(--mono);
-            font-size: 0.72rem;
-            color: var(--gold);
-            margin: 0.75rem 0 0.25rem;
-        }
-
-        /* Leaderboard */
-        .leaderboard {
-            background: var(--terminal-bg);
-            border: 1px solid rgba(191, 164, 111, 0.05);
-            padding: 1.5rem 1.75rem;
-            margin: 2rem 0;
-            overflow-x: auto;
-        }
-        .leaderboard-title {
-            font-family: var(--mono);
-            font-size: 0.6rem;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: var(--gold-dim);
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid rgba(191, 164, 111, 0.04);
-        }
-        .leaderboard table {
-            width: 100%;
-            border-collapse: collapse;
-            font-family: var(--mono);
-            font-size: 0.72rem;
-        }
-        .leaderboard th {
-            text-align: left;
-            color: var(--gold-dim);
-            font-weight: 500;
-            padding: 0.5rem 1rem 0.5rem 0;
-            border-bottom: 1px solid rgba(191, 164, 111, 0.06);
-            letter-spacing: 0.08em;
-            white-space: nowrap;
-        }
-        .leaderboard td {
-            padding: 0.6rem 1rem 0.6rem 0;
-            color: var(--marble);
-            border-bottom: 1px solid rgba(191, 164, 111, 0.02);
-            white-space: nowrap;
-        }
-        .leaderboard .lb-dir {
-            color: rgba(191, 164, 111, 0.25);
-            font-size: 0.6rem;
-        }
-        .leaderboard .lb-coming {
-            color: var(--gold-dim);
-            font-style: italic;
-            padding: 1rem 0;
-            text-align: center;
-        }
-
-        .bench-why {
-            max-width: 620px;
-            margin-top: 2.5rem;
-        }
-        .bench-why p {
-            font-size: 0.88rem;
-            color: var(--marble);
-            line-height: 1.85;
-        }
-        .bench-why strong {
-            color: var(--selenite);
-            font-weight: 500;
-        }
+        .bench-intro { max-width: 620px; margin-bottom: 3rem; }
+        .bench-intro p { font-size: clamp(0.95rem, 2vw, 1.05rem); color: var(--marble); line-height: 1.9; font-weight: 300; }
+        .bench-intro strong { color: var(--selenite); font-weight: 500; }
+        .bench-triple { font-family: var(--mono); font-size: 0.85rem; color: var(--gold); background: var(--void); border: 1px solid rgba(191, 164, 111, 0.06); padding: 1rem 1.5rem; margin: 1.5rem 0 2.5rem; text-align: center; letter-spacing: 0.05em; }
+        .bench-axes { display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 3rem; }
+        .bench-axis { background: var(--void-near); border: 1px solid rgba(191, 164, 111, 0.04); padding: 2rem 2rem 1.75rem; position: relative; overflow: hidden; }
+        .bench-axis::before { content: ''; position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: linear-gradient(180deg, var(--gold-dim), transparent); }
+        .bench-axis-head { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 0.3rem; flex-wrap: wrap; }
+        .bench-axis-num { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.15em; color: var(--gold); }
+        .bench-axis-name { font-family: var(--display); font-size: 1rem; font-weight: 600; color: var(--selenite); letter-spacing: 0.08em; text-transform: uppercase; }
+        .bench-axis-scored { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.1em; color: var(--gold-dim); margin-bottom: 1rem; }
+        .bench-axis p { font-size: 0.85rem; color: var(--marble); line-height: 1.75; margin-bottom: 0.5rem; }
+        .bench-axis strong { color: var(--selenite); font-weight: 500; }
+        .bench-metric { font-family: var(--mono); font-size: 0.72rem; color: var(--gold); margin: 0.75rem 0 0.25rem; }
+        .leaderboard { background: var(--terminal-bg); border: 1px solid rgba(191, 164, 111, 0.05); padding: 1.5rem 1.75rem; margin: 2rem 0; overflow-x: auto; }
+        .leaderboard-title { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(191, 164, 111, 0.04); }
+        .leaderboard table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 0.72rem; }
+        .leaderboard th { text-align: left; color: var(--gold-dim); font-weight: 500; padding: 0.5rem 1rem 0.5rem 0; border-bottom: 1px solid rgba(191, 164, 111, 0.06); letter-spacing: 0.08em; white-space: nowrap; }
+        .leaderboard td { padding: 0.6rem 1rem 0.6rem 0; color: var(--marble); border-bottom: 1px solid rgba(191, 164, 111, 0.02); white-space: nowrap; }
+        .leaderboard .lb-dir { color: rgba(191, 164, 111, 0.25); font-size: 0.6rem; }
+        .leaderboard .lb-coming { color: var(--gold-dim); font-style: italic; padding: 1rem 0; text-align: center; }
+        .bench-why { max-width: 620px; margin-top: 2.5rem; }
+        .bench-why p { font-size: 0.88rem; color: var(--marble); line-height: 1.85; }
+        .bench-why strong { color: var(--selenite); font-weight: 500; }
 
         /* ============================================
-           Use Cases table
+           Use Cases
            ============================================ */
-        .usecases {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 2rem;
-        }
-        .usecases th {
-            font-family: var(--mono);
-            font-size: 0.6rem;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: var(--gold-dim);
-            font-weight: 500;
-            text-align: left;
-            padding: 0.75rem 1.25rem 0.75rem 0;
-            border-bottom: 1px solid rgba(191, 164, 111, 0.08);
-        }
-        .usecases td {
-            font-size: 0.82rem;
-            color: var(--marble);
-            padding: 1rem 1.25rem 1rem 0;
-            border-bottom: 1px solid rgba(191, 164, 111, 0.03);
-            line-height: 1.6;
-            vertical-align: top;
-        }
-        .usecases td:first-child {
-            font-weight: 500;
-            color: var(--selenite);
-            white-space: nowrap;
-        }
-        .usecases td:last-child {
-            font-family: var(--mono);
-            font-size: 0.72rem;
-            color: var(--gold-dim);
-            white-space: nowrap;
-        }
+        .usecases { width: 100%; border-collapse: collapse; margin-top: 2rem; }
+        .usecases th { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold-dim); font-weight: 500; text-align: left; padding: 0.75rem 1.25rem 0.75rem 0; border-bottom: 1px solid rgba(191, 164, 111, 0.08); }
+        .usecases td { font-size: 0.82rem; color: var(--marble); padding: 1rem 1.25rem 1rem 0; border-bottom: 1px solid rgba(191, 164, 111, 0.03); line-height: 1.6; vertical-align: top; }
+        .usecases td:first-child { font-weight: 500; color: var(--selenite); white-space: nowrap; }
+        .usecases td:last-child { font-family: var(--mono); font-size: 0.72rem; color: var(--gold-dim); white-space: nowrap; }
 
         /* ============================================
-           Terminal blocks — Ron Cobb utilitarian ship
+           Terminal blocks
            ============================================ */
-        .terminal {
-            background: var(--terminal-bg);
-            border: 1px solid rgba(191, 164, 111, 0.05);
-            padding: 1.5rem 1.75rem;
-            margin: 1.5rem 0;
-            overflow-x: auto;
-            position: relative;
-        }
-        .terminal-bar {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid rgba(191, 164, 111, 0.04);
-        }
-        .terminal-dot {
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: rgba(191, 164, 111, 0.15);
-        }
-        .terminal-title {
-            font-family: var(--mono);
-            font-size: 0.6rem;
-            color: var(--gold-dim);
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            margin-left: 0.5rem;
-        }
-        .terminal pre {
-            font-family: var(--mono);
-            font-size: 0.78rem;
-            line-height: 1.8;
-            color: var(--marble);
-            white-space: pre;
-            overflow-x: auto;
-        }
+        .terminal { background: var(--terminal-bg); border: 1px solid rgba(191, 164, 111, 0.05); padding: 1.5rem 1.75rem; margin: 1.5rem 0; overflow-x: auto; position: relative; }
+        .terminal-bar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(191, 164, 111, 0.04); }
+        .terminal-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(191, 164, 111, 0.15); }
+        .terminal-title { font-family: var(--mono); font-size: 0.6rem; color: var(--gold-dim); letter-spacing: 0.15em; text-transform: uppercase; margin-left: 0.5rem; }
+        .terminal pre { font-family: var(--mono); font-size: 0.78rem; line-height: 1.8; color: var(--marble); white-space: pre; overflow-x: auto; }
         .terminal pre .cmd { color: var(--selenite); }
         .terminal pre .comment { color: var(--gold-dim); }
         .terminal pre .prompt { color: rgba(191, 164, 111, 0.35); user-select: none; }
         .terminal pre .url { color: var(--gold); }
         .terminal pre .flag { color: var(--marble); }
-
-        /* Inline code */
-        code {
-            font-family: var(--mono);
-            font-size: 0.82em;
-            background: var(--gold-ghost);
-            padding: 0.12em 0.4em;
-            color: var(--gold-bright);
-        }
+        code { font-family: var(--mono); font-size: 0.82em; background: var(--gold-ghost); padding: 0.12em 0.4em; color: var(--gold-bright); }
 
         /* ============================================
-           Quickstart section
+           Quickstart
            ============================================ */
-        .quickstart-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 3rem;
-            margin-top: 2rem;
-        }
-        .qs-block h3 {
-            font-family: var(--display);
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--selenite);
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            margin-bottom: 0.3rem;
-        }
-        .qs-block .qs-sub {
-            font-family: var(--mono);
-            font-size: 0.6rem;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: var(--gold-dim);
-            margin-bottom: 1rem;
-        }
-        .qs-block p {
-            font-size: 0.85rem;
-            color: var(--marble);
-            margin-bottom: 1rem;
-            line-height: 1.75;
-        }
-        .qs-prereq {
-            font-family: var(--mono);
-            font-size: 0.72rem;
-            color: var(--marble);
-            margin-bottom: 1rem;
-        }
+        .quickstart-grid { display: grid; grid-template-columns: 1fr; gap: 3rem; margin-top: 2rem; }
+        .qs-block h3 { font-family: var(--display); font-size: 1.1rem; font-weight: 600; color: var(--selenite); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.3rem; }
+        .qs-block .qs-sub { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 1rem; }
+        .qs-block p { font-size: 0.85rem; color: var(--marble); margin-bottom: 1rem; line-height: 1.75; }
+        .qs-prereq { font-family: var(--mono); font-size: 0.72rem; color: var(--marble); margin-bottom: 1rem; }
         .qs-prereq strong { color: var(--selenite); font-weight: 500; }
 
         /* ============================================
-           Vision — Interstellar tesseract
+           Vision
            ============================================ */
-        .vision {
-            max-width: 620px;
+        .vision { max-width: 620px; }
+        .vision-row { margin-bottom: 2.5rem; }
+        .vision-tag { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.5rem; }
+        .vision-tag-big {
+            font-family: var(--display); font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--selenite); margin-bottom: 0.75rem;
         }
-        .vision-row {
-            margin-bottom: 2.5rem;
-        }
-        .vision-tag {
-            font-family: var(--mono);
-            font-size: 0.55rem;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            color: var(--gold);
-            margin-bottom: 0.5rem;
-        }
-        .vision p {
-            font-family: var(--sans);
-            font-size: clamp(0.95rem, 2vw, 1.08rem);
-            color: var(--marble);
-            line-height: 1.85;
-            font-weight: 300;
-        }
-        .vision strong {
-            color: var(--selenite);
-            font-weight: 500;
-        }
-        .vision em {
-            color: var(--amber);
-            font-style: italic;
-        }
+        .vision p { font-family: var(--sans); font-size: clamp(0.95rem, 2vw, 1.08rem); color: var(--marble); line-height: 1.85; font-weight: 300; }
+        .vision strong { color: var(--selenite); font-weight: 500; }
+        .vision em { color: var(--amber); font-style: italic; }
 
         /* ============================================
-           Open Source repos — Rams/Aicher discipline
+           Open Source repos
            ============================================ */
-        .oss-note {
-            font-size: 0.88rem;
-            color: var(--marble);
-            margin-bottom: 2rem;
-        }
-        .repo-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-        }
-        .repo {
-            background: var(--void-near);
-            border: 1px solid rgba(191, 164, 111, 0.04);
-            padding: 1.25rem 1.5rem;
-            transition: border-color 0.3s;
-            display: block;
-        }
+        .oss-note { font-size: 0.88rem; color: var(--marble); margin-bottom: 2rem; }
+        .repo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        .repo { background: var(--void-near); border: 1px solid rgba(191, 164, 111, 0.04); padding: 1.25rem 1.5rem; transition: border-color 0.3s; display: block; }
         .repo:hover { border-color: rgba(191, 164, 111, 0.15); }
-        .repo-name {
-            font-family: var(--mono);
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: var(--gold);
-            margin-bottom: 0.3rem;
-        }
-        .repo-desc {
-            font-size: 0.75rem;
-            color: var(--marble);
-            line-height: 1.5;
-        }
-        .repo-coming {
-            font-family: var(--mono);
-            font-size: 0.55rem;
-            color: var(--gold-dim);
-            letter-spacing: 0.1em;
-        }
+        .repo-name { font-family: var(--mono); font-size: 0.75rem; font-weight: 500; color: var(--gold); margin-bottom: 0.3rem; }
+        .repo-desc { font-size: 0.75rem; color: var(--marble); line-height: 1.5; }
+        .repo-coming { font-family: var(--mono); font-size: 0.55rem; color: var(--gold-dim); letter-spacing: 0.1em; }
 
         /* ============================================
            Closing / Coda
            ============================================ */
-        .coda {
-            text-align: center;
-            padding: 6rem 0 2rem;
-        }
-        .coda blockquote {
-            max-width: 520px;
-            margin: 0 auto;
-        }
-        .coda blockquote p {
-            font-family: var(--sans);
-            font-size: clamp(1rem, 2vw, 1.12rem);
-            font-weight: 300;
-            color: var(--marble);
-            line-height: 2;
-            margin-bottom: 0.5rem;
-        }
-        .coda-arriving {
-            font-family: var(--display);
-            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--selenite);
-            margin-top: 2rem;
+        .coda { text-align: center; padding: 6rem 0 2rem; }
+        .coda blockquote { max-width: 520px; margin: 0 auto; }
+        .coda blockquote p { font-family: var(--sans); font-size: clamp(1rem, 2vw, 1.12rem); font-weight: 300; color: var(--marble); line-height: 2; margin-bottom: 0.5rem; }
+        .coda-tagline {
+            font-family: var(--display); font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--selenite); margin-top: 2rem;
         }
 
         /* ============================================
-           Footer — Criterion Collection colophon
+           Footer
            ============================================ */
-        footer {
-            padding: 6rem 0 3rem;
-            text-align: center;
-        }
-        footer::before {
-            content: '';
-            display: block;
-            width: 30px;
-            height: 1px;
-            background: rgba(191, 164, 111, 0.2);
-            margin: 0 auto 3rem;
-        }
-        .foot-brand {
-            font-family: var(--display);
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--selenite);
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            margin-bottom: 0.3rem;
-        }
-        .foot-tag {
-            font-family: var(--mono);
-            font-size: 0.55rem;
-            letter-spacing: 0.3em;
-            color: var(--gold-dim);
-            margin-bottom: 1.5rem;
-        }
-        .foot-links {
-            display: flex;
-            justify-content: center;
-            gap: 2.5rem;
-            flex-wrap: wrap;
-            margin-bottom: 2rem;
-        }
-        .foot-links a {
-            font-family: var(--mono);
-            font-size: 0.68rem;
-            color: var(--marble);
-            letter-spacing: 0.08em;
-        }
+        footer { padding: 6rem 0 3rem; text-align: center; }
+        footer::before { content: ''; display: block; width: 30px; height: 1px; background: rgba(191, 164, 111, 0.2); margin: 0 auto 3rem; }
+        .foot-brand { font-family: var(--display); font-size: 0.85rem; font-weight: 600; color: var(--selenite); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.3rem; }
+        .foot-tag { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.3em; color: var(--gold-dim); margin-bottom: 1.5rem; }
+        .foot-links { display: flex; justify-content: center; gap: 2.5rem; flex-wrap: wrap; margin-bottom: 2rem; }
+        .foot-links a { font-family: var(--mono); font-size: 0.68rem; color: var(--marble); letter-spacing: 0.08em; }
         .foot-links a:hover { color: var(--gold); }
-        .foot-copy {
-            font-family: var(--mono);
-            font-size: 0.55rem;
-            color: rgba(191, 164, 111, 0.2);
-            letter-spacing: 0.05em;
-        }
+        .foot-copy { font-family: var(--mono); font-size: 0.55rem; color: rgba(191, 164, 111, 0.2); letter-spacing: 0.05em; }
 
         /* ============================================
            Responsive
            ============================================ */
         @media (min-width: 640px) {
-            .scenes-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
+            .scenes-grid { grid-template-columns: repeat(3, 1fr); }
             .scene-img { height: 200px; }
             .scene-void { height: 140px; }
             .scene-body { padding: 1.25rem 1.5rem; }
             .scene-date { font-size: 0.85rem; }
             .scene-dialog p { font-size: 0.8rem; }
-            .bench-axes {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .bench-axes { grid-template-columns: repeat(2, 1fr); }
+            .daedalus-examples { grid-template-columns: repeat(3, 1fr); }
         }
         @media (max-width: 639px) {
             section { padding: 5rem 0; }
@@ -1216,6 +498,7 @@
             .foot-links { flex-direction: column; gap: 1rem; }
             .usecases td:first-child { white-space: normal; }
             .usecases td:last-child { white-space: normal; }
+            .scrubber { flex-wrap: wrap; justify-content: center; }
         }
     </style>
 </head>
@@ -1230,9 +513,7 @@
         <div class="hero-godray"></div>
         <div class="hero-orrery" aria-hidden="true">
             <div class="orrery-ring"></div>
-            <div class="orrery-ring">
-                <div class="orrery-node"></div>
-            </div>
+            <div class="orrery-ring"><div class="orrery-node"></div></div>
             <div class="orrery-ring"></div>
         </div>
         <div class="hero-content">
@@ -1245,16 +526,25 @@
                 <span class="scrub-seg"></span>
                 <span class="scrub-label">1945</span>
                 <span class="scrub-seg"></span>
-                <span class="scrub-node active"></span>
+                <span class="scrub-node"></span>
                 <span class="scrub-seg"></span>
                 <span class="scrub-label">2016</span>
                 <span class="scrub-seg"></span>
-                <span class="scrub-node"></span>
-                <span class="scrub-seg"></span>
-                <span class="scrub-label">20??</span>
+                <span class="scrub-node active"></span>
+                <span class="scrub-label now">2026</span>
+                <span class="scrub-branch">
+                    <span class="branch-line"></span>
+                    <span class="branch-line"></span>
+                    <span class="branch-line optimal"></span>
+                    <span class="branch-line"></span>
+                    <span class="branch-line"></span>
+                </span>
             </div>
             <p class="hero-sub fade-in d3">Render any moment in human history. Simulate the causal chains that connect them. Score what happens next.</p>
-            <a href="#system" class="cta fade-in d4">EXPLORE THE LAB</a>
+            <div class="hero-ctas fade-in d4">
+                <a href="#system" class="cta">EXPLORE THE LAB</a>
+                <a href="https://timepoint-flash-deploy-production.up.railway.app/docs" class="cta-secondary">TRY FLASH — LIVE API</a>
+            </div>
         </div>
     </section>
 
@@ -1274,7 +564,8 @@
                     <div class="system-flow-node"><div class="system-flow-dot"></div></div>
                     <div class="system-flow-text">
                         <div class="system-flow-name">Flash</div>
-                        <div class="system-flow-desc">Renders any moment as a complete scene — characters, dialog, images — grounded by Google Search.</div>
+                        <div class="system-flow-desc">Renders any moment as a complete scene — characters, dialog, images — grounded by web search verification.</div>
+                        <a href="https://github.com/timepoint-ai/timepoint-flash" class="system-flow-link">github.com/timepoint-ai/timepoint-flash</a>
                     </div>
                 </div>
                 <div class="system-flow-step">
@@ -1282,6 +573,7 @@
                     <div class="system-flow-text">
                         <div class="system-flow-name">Daedalus</div>
                         <div class="system-flow-desc">Simulates the causal chains <em>between</em> moments — dozens of entities, hundreds of timepoints, with auditable provenance. Every run produces structured training data for fine-tuning.</div>
+                        <a href="https://github.com/timepoint-ai/timepoint-daedalus" class="system-flow-link">github.com/timepoint-ai/timepoint-daedalus</a>
                     </div>
                 </div>
                 <div class="system-flow-step">
@@ -1289,6 +581,7 @@
                     <div class="system-flow-text">
                         <div class="system-flow-name">Proteus</div>
                         <div class="system-flow-desc">Lets AI agents bet on <em>future</em> moments with character-level precision — a prediction market where the game deepens as models improve.</div>
+                        <a href="https://cf1c9d89-296a-46f9-bce6-3c2090e82753-00-3k1sinkfqs6p5.worf.replit.dev/whitepaper" class="system-flow-link">Read the Proteus whitepaper</a>
                     </div>
                 </div>
                 <div class="system-flow-step">
@@ -1301,6 +594,10 @@
                 <div class="system-loop">
                     <p>Together, they form a closed loop: render the past, simulate the dynamics, predict the future, score the predictions, improve the models. We call the accumulated output <strong>the Clockchain</strong> — <em>a continuously refined, probabilistically scored reconstruction of what actually happened and what was actually said throughout human history.</em></p>
                 </div>
+            </div>
+
+            <div class="clockchain-callout fade-in d3">
+                <p><strong>The Clockchain Protocol</strong> — Read <a href="https://www.seanmcdonald.xyz/p/the-clockchain-protocol-the-l1-for">the 2022 blog post</a> that first proposed decentralized timekeeping as infrastructure — written before LLMs made temporal reconstruction practical. The vision predates the tools; now the tools exist. Check back soon for updates on the Clockchain project.</p>
             </div>
         </div>
     </section>
@@ -1321,7 +618,7 @@
                     <span class="product-badge">Apache 2.0</span>
                 </div>
                 <div class="product-sub">Scene Generation Engine</div>
-                <p>Type a query. Get a complete historical scene: verified location, characters with distinct voices, period-accurate dialog, and a photorealistic AI image. 14 specialized agents, Google Search grounding, critique-retry loops, 3-tier image fallback.</p>
+                <p>Type a query. Get a complete historical scene: verified location, characters with distinct voices, period-accurate dialog, and a photorealistic AI image. 14 specialized agents, search-verified grounding, critique-retry loops, 3-tier image fallback.</p>
 
                 <div class="pipeline"><span class="node">Judge</span> <span class="arrow">→</span> <span class="node">Grounding</span> <span class="arrow">→</span> <span class="node">Timeline</span> <span class="arrow">→</span> <span class="node">Scene</span>
                                                 <span class="arrow">↓</span>
@@ -1331,16 +628,18 @@
                                                 <span class="arrow">↓</span>
                           <span class="node">ImagePrompt</span> <span class="arrow">→</span> <span class="node">Optimizer</span> <span class="arrow">→</span> <span class="node">ImageGen</span></div>
 
+                <a href="https://timepoint-flash-deploy-production.up.railway.app/docs" class="product-demo">TRY FLASH — LIVE API</a>
+
                 <div class="product-bench">
                     <div class="product-bench-label">In SNAG Bench</div>
-                    <p>Flash's Grounding Agent and Critique Agent serve as the scoring rubric for historical fidelity. Every factual claim in a generated scene is verified against Google Search. Every dialog line is checked for anachronisms. The survival rate IS the score.</p>
+                    <p>Flash's Grounding Agent and Critique Agent serve as the scoring rubric for historical fidelity. Every factual claim in a generated scene is verified against web search. Every dialog line is checked for anachronisms. The survival rate IS the score.</p>
                 </div>
 
-                <div class="product-stats">630+ tests · 14-agent pipeline · Google Search grounding · Apache 2.0</div>
+                <div class="product-stats">630+ tests · 14-agent pipeline · search-verified grounding · Apache 2.0</div>
                 <a href="https://github.com/timepoint-ai/timepoint-flash" class="product-repo">github.com/timepoint-ai/timepoint-flash</a>
             </div>
 
-            <!-- ——— SCENE CARDS ——— -->
+            <!-- ——— FLASH SCENE GALLERY ——— -->
             <div class="scenes-grid">
                 <div class="scene fade-in d1">
                     <img src="docs/images/alphago-move37.jpeg" alt="AlphaGo vs Lee Sedol — Move 37" class="scene-img">
@@ -1351,6 +650,7 @@
                             <p><span class="spk">Commentator:</span> "That's not a move any human would play."</p>
                             <p><span class="spk">Lee Sedol:</span> "It's... unexpected. Maybe it's a bluff?"</p>
                         </div>
+                        <div class="scene-badge">Flash-generated scene</div>
                     </div>
                 </div>
                 <div class="scene fade-in d2">
@@ -1362,6 +662,7 @@
                             <p><span class="spk">Bainbridge:</span> "Minus ten seconds."</p>
                             <p><span class="spk">Bainbridge:</span> "Now we are all sons of bitches."</p>
                         </div>
+                        <div class="scene-badge">Image generation pending</div>
                     </div>
                 </div>
                 <div class="scene fade-in d3">
@@ -1373,6 +674,7 @@
                             <p><span class="spk">Spurinna:</span> "The Ides have come, Caesar."</p>
                             <p><span class="spk">Caesar:</span> "Aye — but they are not yet gone."</p>
                         </div>
+                        <div class="scene-badge">Image generation pending</div>
                     </div>
                 </div>
             </div>
@@ -1384,7 +686,7 @@
                     <span class="product-badge">Open Source</span>
                     <span class="product-badge">Apache 2.0</span>
                 </div>
-                <div class="product-sub">Social Network Augmented Generation</div>
+                <div class="product-sub">Social Network Augmented Generation (SNAG)</div>
                 <p><strong>The problem:</strong> LLMs collapse when simulating more than ~10 characters over ~20 interactions. Context explodes, personalities blur, causality drifts.</p>
                 <p><strong>The solution: SNAG.</strong> You know RAG — retrieve <em>documents</em> to ground generation. SNAG retrieves and maintains a <em>structured social graph</em>: relationships, secrets, power dynamics, emotional states, knowledge flow, and memory. RAG gives an LLM facts. SNAG gives it an entire social world.</p>
                 <p>Scales to dozens of entities across hundreds of timepoints. Causality stays auditable. $0.15–$1.00 per run.</p>
@@ -1406,13 +708,37 @@
                 <a href="https://github.com/timepoint-ai/timepoint-daedalus" class="product-repo">github.com/timepoint-ai/timepoint-daedalus</a>
             </div>
 
+            <!-- ——— DAEDALUS EXAMPLE GALLERY ——— -->
+            <div class="daedalus-gallery fade-in">
+                <div class="daedalus-gallery-title">Example Simulations</div>
+                <div class="daedalus-examples">
+                    <div class="daedalus-ex">
+                        <div class="daedalus-ex-label">PEARL Mode</div>
+                        <div class="daedalus-ex-scenario">Manhattan Project — 1942-1945</div>
+                        <div class="daedalus-ex-meta">12 entities · 48 timepoints · $0.35/run</div>
+                        <p>Oppenheimer, Teller, Groves, Szilard — tracked across compartmentalized knowledge boundaries. Who knew what, when.</p>
+                    </div>
+                    <div class="daedalus-ex">
+                        <div class="daedalus-ex-label">PORTAL Mode</div>
+                        <div class="daedalus-ex-scenario">Brexit Referendum — Backward from June 23, 2016</div>
+                        <div class="daedalus-ex-meta">8 entities · 24 timepoints · $0.22/run</div>
+                        <p>Backward-reason from the result. Which causal chains were decisive? Where did the critical path diverge?</p>
+                    </div>
+                    <div class="daedalus-ex">
+                        <div class="daedalus-ex-label">BRANCHING Mode</div>
+                        <div class="daedalus-ex-scenario">Cuban Missile Crisis — Counterfactual</div>
+                        <div class="daedalus-ex-meta">6 entities · 14 timepoints · $0.18/run</div>
+                        <p>What if Kennedy had followed the Joint Chiefs? Branch at each decision point. Score divergence across 50 runs.</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- ——— PROTEUS ——— -->
             <div class="product fade-in">
                 <div class="product-head">
                     <span class="product-name">PROTEUS</span>
                     <span class="product-badge">Research Preview</span>
                     <span class="product-badge">v0 Alpha</span>
-                    <span class="product-badge">BASE Sepolia</span>
                 </div>
                 <div class="product-sub">Prediction Markets for AI Agents</div>
                 <p>Binary prediction markets encode one bit per contract. As AI approaches superhuman forecasting, the edge collapses. Proteus creates markets where the game <em>deepens</em> as AI improves.</p>
@@ -1429,8 +755,8 @@
                     <p>Proteus resolved markets feed the benchmark as live predictive accuracy scores. Weight scales linearly with market size — a model that wins a 10 ETH market gets 10x the benchmark credit of a 1 ETH market. The test set is the future. It can never leak.</p>
                 </div>
 
-                <div class="product-stats">259+ tests · BASE Sepolia testnet · v0 alpha</div>
-                <a href="https://github.com/timepoint-ai/proteus" class="product-repo">github.com/timepoint-ai/proteus</a>
+                <div class="product-stats">259+ tests · testnet · v0 alpha</div>
+                <a href="https://cf1c9d89-296a-46f9-bce6-3c2090e82753-00-3k1sinkfqs6p5.worf.replit.dev/whitepaper" class="product-repo">Read the Proteus whitepaper</a>
             </div>
         </div>
     </section>
@@ -1453,7 +779,6 @@
                 <p style="font-size: 0.85rem; color: var(--marble); line-height: 1.75;">An RDF-like triple. Model X scored Y on task Z. Triples are published, aggregated, and ranked. Anyone can submit. Anyone can verify. The scoring rubrics are the existing Timepoint engines.</p>
             </div>
 
-            <!-- Four axes -->
             <div class="bench-axes fade-in d3">
                 <div class="bench-axis">
                     <div class="bench-axis-head">
@@ -1461,11 +786,10 @@
                         <span class="bench-axis-name">Grounding Fidelity</span>
                     </div>
                     <div class="bench-axis-scored">Scored by Flash</div>
-                    <p>Can the model produce historically accurate scenes? Flash's Grounding Agent verifies factual claims against Google Search. The Critique Agent checks for anachronisms, cultural errors, modern idioms.</p>
+                    <p>Can the model produce historically accurate scenes? Flash's Grounding Agent verifies factual claims against web search. The Critique Agent checks for anachronisms, cultural errors, modern idioms.</p>
                     <div class="bench-metric">Metric: Grounding Survival Rate (GSR) — % of claims that survive verification</div>
                     <p>Task set: curated historical queries at three difficulty tiers (well-documented / sparse / adversarial).</p>
                 </div>
-
                 <div class="bench-axis">
                     <div class="bench-axis-head">
                         <span class="bench-axis-num">AXIS 2</span>
@@ -1476,7 +800,6 @@
                     <div class="bench-metric">Metric: Temporal Coherence Score (TCS) — composite across all dimensions</div>
                     <p>Run the same scenario 5x and measure convergence (Jaccard on causal graphs). Task set at three scales: 4 entities/10tp, 8/20, 15+/50+.</p>
                 </div>
-
                 <div class="bench-axis">
                     <div class="bench-axis-head">
                         <span class="bench-axis-num">AXIS 3</span>
@@ -1485,9 +808,8 @@
                     <div class="bench-axis-scored">Scored by Proteus</div>
                     <p>Can the model predict real-world language output? Proteus markets resolve on-chain with Levenshtein distance. Weight scales linearly with market size — bigger stakes, bigger benchmark credit.</p>
                     <div class="bench-metric">Metric: Mean Normalized Edit Distance (MNED) — lower is better</div>
-                    <p>Markets stratified: predictable speakers / unpredictable / null prediction / temporal windows. The test set is the future. Cannot leak. Cannot be gamed. Refreshes with every resolution.</p>
+                    <p>Markets stratified: predictable speakers / unpredictable / null prediction / temporal windows. The test set is the future. Cannot leak. Cannot be gamed.</p>
                 </div>
-
                 <div class="bench-axis">
                     <div class="bench-axis-head">
                         <span class="bench-axis-num">AXIS 4</span>
@@ -1500,7 +822,6 @@
                 </div>
             </div>
 
-            <!-- Leaderboard -->
             <div class="leaderboard fade-in d4">
                 <div class="leaderboard-title">SNAG Bench — Live Leaderboard</div>
                 <table>
@@ -1515,9 +836,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td colspan="6" class="lb-coming">Coming soon — submit your model</td>
-                        </tr>
+                        <tr><td colspan="6" class="lb-coming">Coming soon — submit your model</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1537,54 +856,16 @@
         <div class="container">
             <div class="sec-label fade-in"><span class="sec-num">04</span>WHO USES THIS</div>
             <table class="usecases fade-in d1">
-                <thead>
-                    <tr>
-                        <th>Use Case</th>
-                        <th>How</th>
-                        <th>Products</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Use Case</th><th>How</th><th>Products</th></tr></thead>
                 <tbody>
-                    <tr>
-                        <td>ML Training Data</td>
-                        <td>Daedalus generates structured JSONL with causal provenance for fine-tuning temporal reasoning</td>
-                        <td>Daedalus</td>
-                    </tr>
-                    <tr>
-                        <td>Historical Education</td>
-                        <td>Students interrogate characters in Flash-generated scenes. Ask Caesar what he had for breakfast.</td>
-                        <td>Flash</td>
-                    </tr>
-                    <tr>
-                        <td>Corporate Strategy</td>
-                        <td>PORTAL backward-reasons from target outcomes. Run board scenarios 200 times.</td>
-                        <td>Daedalus</td>
-                    </tr>
-                    <tr>
-                        <td>Litigation Support</td>
-                        <td>Reconstruct "what happened and when" with scored causal chains and competing theories</td>
-                        <td>Daedalus, Flash</td>
-                    </tr>
-                    <tr>
-                        <td>Museum Installations</td>
-                        <td>Immersive temporal experiences — walk into Trinity, 5:29 AM, and talk to Oppenheimer</td>
-                        <td>Flash, PORTALS</td>
-                    </tr>
-                    <tr>
-                        <td>AI Model Evaluation</td>
-                        <td>SNAG Bench scores any model on grounding, coherence, prediction, and human judgment</td>
-                        <td>SNAG Bench</td>
-                    </tr>
-                    <tr>
-                        <td>Game &amp; Film Worldbuilding</td>
-                        <td>Historically grounded characters, dialog, and worlds with full relationship graphs</td>
-                        <td>Flash, Daedalus</td>
-                    </tr>
-                    <tr>
-                        <td>Insurance Investigation</td>
-                        <td>Run causal chains backward from loss events. Score competing explanations.</td>
-                        <td>Daedalus PORTAL</td>
-                    </tr>
+                    <tr><td>ML Training Data</td><td>Daedalus generates structured JSONL with causal provenance for fine-tuning temporal reasoning</td><td>Daedalus</td></tr>
+                    <tr><td>Historical Education</td><td>Students interrogate characters in Flash-generated scenes. Ask Caesar what he had for breakfast.</td><td>Flash</td></tr>
+                    <tr><td>Corporate Strategy</td><td>PORTAL backward-reasons from target outcomes. Run board scenarios 200 times.</td><td>Daedalus</td></tr>
+                    <tr><td>Litigation Support</td><td>Reconstruct "what happened and when" with scored causal chains and competing theories</td><td>Daedalus, Flash</td></tr>
+                    <tr><td>Museum Installations</td><td>Immersive temporal experiences — walk into Trinity, 5:29 AM, and talk to Oppenheimer</td><td>Flash, PORTALS</td></tr>
+                    <tr><td>AI Model Evaluation</td><td>SNAG Bench scores any model on grounding, coherence, prediction, and human judgment</td><td>SNAG Bench</td></tr>
+                    <tr><td>Game &amp; Film Worldbuilding</td><td>Historically grounded characters, dialog, and worlds with full relationship graphs</td><td>Flash, Daedalus</td></tr>
+                    <tr><td>Insurance Investigation</td><td>Run causal chains backward from loss events. Score competing explanations.</td><td>Daedalus PORTAL</td></tr>
                 </tbody>
             </table>
         </div>
@@ -1603,11 +884,11 @@
                     <p>Render any moment. Simulate any social system. Score temporal reasoning with SNAG Bench. Generate training data with full causal provenance.</p>
                 </div>
                 <div class="vision-row">
-                    <div class="vision-tag">THE CLOCKCHAIN</div>
+                    <div class="vision-tag-big">THE CLOCKCHAIN</div>
                     <p>Every scene Flash generates, every causal chain Daedalus traces, every Proteus market that resolves adds a node to a growing temporal knowledge graph — <strong>a continuously refined, probabilistically scored reconstruction of human history as dialog.</strong> Not an encyclopedia. A <em>ledger of temporal truth</em> with confidence scores, source links, and competing interpretations at every node.</p>
                 </div>
                 <div class="vision-row">
-                    <div class="vision-tag">PORTALS™</div>
+                    <div class="vision-tag-big">PORTALS™</div>
                     <p>In the immersive VR era, these reconstructions become places you inhabit. Walk into any moment. Talk to anyone who was there. The simulation is the destination.</p>
                 </div>
             </div>
@@ -1625,21 +906,17 @@
             <div class="repo-grid">
                 <a href="https://github.com/timepoint-ai/timepoint-flash" class="repo fade-in d1">
                     <div class="repo-name">timepoint-flash</div>
-                    <div class="repo-desc">Scene generation engine (14 agents, Google Search grounding)</div>
+                    <div class="repo-desc">Scene generation engine (14 agents, search-verified grounding)</div>
                 </a>
                 <a href="https://github.com/timepoint-ai/timepoint-daedalus" class="repo fade-in d2">
                     <div class="repo-name">timepoint-daedalus</div>
                     <div class="repo-desc">SNAG engine, social simulation, training data synthesis</div>
                 </a>
-                <a href="https://github.com/timepoint-ai/proteus" class="repo fade-in d3">
+                <a href="https://cf1c9d89-296a-46f9-bce6-3c2090e82753-00-3k1sinkfqs6p5.worf.replit.dev/whitepaper" class="repo fade-in d3">
                     <div class="repo-name">timepoint-proteus</div>
-                    <div class="repo-desc">Prediction markets for AI agents (BASE)</div>
+                    <div class="repo-desc">Prediction markets for AI agents</div>
                 </a>
-                <a href="https://github.com/timepoint-ai/timepoint-synthesizer" class="repo fade-in d4">
-                    <div class="repo-name">timepoint-synthesizer</div>
-                    <div class="repo-desc">Waveform control for entity state parameters</div>
-                </a>
-                <div class="repo fade-in d5">
+                <div class="repo fade-in d4">
                     <div class="repo-name">snag-bench <span class="repo-coming">coming soon</span></div>
                     <div class="repo-desc">Scoring standard for temporal reasoning</div>
                 </div>
@@ -1657,72 +934,46 @@
 
             <div class="quickstart-grid">
 
-                <!-- Flash quickstart -->
+                <!-- Flash -->
                 <div class="qs-block fade-in d1">
                     <h3>FLASH</h3>
-                    <div class="qs-sub">Scene Engine</div>
-                    <div class="qs-prereq"><strong>Requires:</strong> Python 3.10+ · Google API key (<a href="https://aistudio.google.com">free at AI Studio</a>)</div>
+                    <div class="qs-sub">Scene Engine — Install, Run, Query</div>
+                    <div class="qs-prereq"><strong>Requires:</strong> Python 3.10+ · LLM API key</div>
                     <div class="terminal">
                         <div class="terminal-bar">
-                            <span class="terminal-dot"></span>
-                            <span class="terminal-dot"></span>
-                            <span class="terminal-dot"></span>
-                            <span class="terminal-title">INSTALL</span>
+                            <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+                            <span class="terminal-title">INSTALL + RUN</span>
                         </div>
                         <pre><span class="prompt">$ </span><span class="cmd">git clone https://github.com/timepoint-ai/timepoint-flash.git</span>
 <span class="prompt">$ </span><span class="cmd">cd timepoint-flash</span>
 <span class="prompt">$ </span><span class="cmd">pip install -e .</span>
-<span class="prompt">$ </span><span class="cmd">cp .env.example .env</span>   <span class="comment"># add your GOOGLE_API_KEY</span>
+<span class="prompt">$ </span><span class="cmd">cp .env.example .env</span>   <span class="comment"># add your API key</span>
 <span class="prompt">$ </span><span class="cmd">./run.sh -r</span>             <span class="comment"># start server</span></pre>
                     </div>
                     <div class="terminal">
                         <div class="terminal-bar">
-                            <span class="terminal-dot"></span>
-                            <span class="terminal-dot"></span>
-                            <span class="terminal-dot"></span>
+                            <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
                             <span class="terminal-title">GENERATE A SCENE</span>
                         </div>
-                        <pre><span class="prompt">$ </span><span class="cmd">curl -X POST <span class="url">localhost:8000/api/v1/timepoints/generate/stream</span></span> \
+                        <pre><span class="comment"># Try it now — no auth required</span>
+<span class="prompt">$ </span><span class="cmd">curl -X POST <span class="url">https://timepoint-flash-deploy-production.up.railway.app/api/v1/timepoints/generate/sync</span></span> \
   <span class="flag">-H</span> "Content-Type: application/json" \
   <span class="flag">-d</span> '{"query": "Oppenheimer Trinity test 5:29 AM July 16 1945",
+       "preset": "hyper",
        "generate_image": true}'</pre>
                     </div>
-                    <p>Swagger docs at <code>localhost:8000/docs</code> · Presets: <code>hyper</code> <code>balanced</code> <code>hd</code></p>
-                </div>
-
-                <!-- Daedalus quickstart -->
-                <div class="qs-block fade-in d2">
-                    <h3>DAEDALUS</h3>
-                    <div class="qs-sub">SNAG Engine</div>
-                    <div class="qs-prereq"><strong>Requires:</strong> Python 3.10+ · Google or OpenRouter API key</div>
                     <div class="terminal">
                         <div class="terminal-bar">
-                            <span class="terminal-dot"></span>
-                            <span class="terminal-dot"></span>
-                            <span class="terminal-dot"></span>
-                            <span class="terminal-title">INSTALL + RUN</span>
+                            <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+                            <span class="terminal-title">FLASH API ENDPOINTS</span>
                         </div>
-                        <pre><span class="prompt">$ </span><span class="cmd">git clone https://github.com/timepoint-ai/timepoint-daedalus.git</span>
-<span class="prompt">$ </span><span class="cmd">cd timepoint-daedalus</span>
-<span class="prompt">$ </span><span class="cmd">pip install -e .</span>
-<span class="prompt">$ </span><span class="cmd">cp .env.example .env</span>   <span class="comment"># add API key</span>
-<span class="prompt">$ </span><span class="cmd">python -m daedalus.run</span>  <span class="comment"># run default scenario</span></pre>
-                    </div>
-                    <p>Each run outputs structured JSONL with full causal graphs, entity state tensors, and dialog — ready for fine-tuning pipelines or analysis.</p>
-                </div>
+                        <pre><span class="comment"># Live API — no auth required</span>
+<span class="comment"># Base: https://timepoint-flash-deploy-production.up.railway.app</span>
 
-                <!-- API reference -->
-                <div class="qs-block fade-in d3">
-                    <h3>API</h3>
-                    <div class="qs-sub">Flash REST Endpoints</div>
-                    <div class="terminal">
-                        <div class="terminal-bar">
-                            <span class="terminal-dot"></span>
-                            <span class="terminal-dot"></span>
-                            <span class="terminal-dot"></span>
-                            <span class="terminal-title">KEY ENDPOINTS</span>
-                        </div>
-                        <pre><span class="comment"># Generate (streaming SSE)</span>
+<span class="comment"># Generate a scene (sync — blocks 30-120s)</span>
+<span class="cmd">POST</span> <span class="url">/api/v1/timepoints/generate/sync</span>
+
+<span class="comment"># Generate a scene (streaming SSE)</span>
 <span class="cmd">POST</span> <span class="url">/api/v1/timepoints/generate/stream</span>
 
 <span class="comment"># Chat with a character in the scene</span>
@@ -1732,9 +983,30 @@
 <span class="cmd">POST</span> <span class="url">/api/v1/temporal/{id}/next</span>
 <span class="cmd">POST</span> <span class="url">/api/v1/temporal/{id}/prior</span>
 
-<span class="comment"># Get linked timeline</span>
-<span class="cmd">GET</span>  <span class="url">/api/v1/temporal/{id}/sequence</span></pre>
+<span class="comment"># Retrieve / list scenes</span>
+<span class="cmd">GET</span>  <span class="url">/api/v1/timepoints/{id}?full=true</span>
+<span class="cmd">GET</span>  <span class="url">/api/v1/timepoints</span></pre>
                     </div>
+                    <p>Swagger docs at <a href="https://timepoint-flash-deploy-production.up.railway.app/docs"><code>/docs</code></a> · Presets: <code>hyper</code> <code>balanced</code> <code>hd</code> <code>gemini3</code></p>
+                </div>
+
+                <!-- Daedalus -->
+                <div class="qs-block fade-in d2">
+                    <h3>DAEDALUS</h3>
+                    <div class="qs-sub">SNAG Engine — Install + Run</div>
+                    <div class="qs-prereq"><strong>Requires:</strong> Python 3.10+ · LLM API key</div>
+                    <div class="terminal">
+                        <div class="terminal-bar">
+                            <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+                            <span class="terminal-title">INSTALL + RUN</span>
+                        </div>
+                        <pre><span class="prompt">$ </span><span class="cmd">git clone https://github.com/timepoint-ai/timepoint-daedalus.git</span>
+<span class="prompt">$ </span><span class="cmd">cd timepoint-daedalus</span>
+<span class="prompt">$ </span><span class="cmd">pip install -e .</span>
+<span class="prompt">$ </span><span class="cmd">cp .env.example .env</span>   <span class="comment"># add API key</span>
+<span class="prompt">$ </span><span class="cmd">python -m daedalus.run</span>  <span class="comment"># run default scenario</span></pre>
+                    </div>
+                    <p>Each run outputs structured JSONL with full causal graphs, entity state tensors, and dialog — ready for fine-tuning pipelines or analysis.</p>
                 </div>
             </div>
         </div>
@@ -1747,9 +1019,9 @@
     <section class="coda">
         <div class="container">
             <blockquote class="fade-in">
-                <p>History is not dead — it is merely unseen.</p>
-                <p>We are building the instruments to see it.</p>
-                <div class="coda-arriving fade-in d1">TIMEPOINT IS ARRIVING.</div>
+                <p>History comes alive through the power of LLMs.</p>
+                <p>We built the engines. The timeline is yours.</p>
+                <div class="coda-tagline fade-in d1">WELCOME TO THE TIMELINE.</div>
             </blockquote>
         </div>
     </section>
@@ -1770,9 +1042,6 @@
         </div>
     </footer>
 
-    <!-- ==========================================
-         Scroll reveal — imperial patience
-         ========================================== -->
     <script>
         const io = new IntersectionObserver((entries) => {
             entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
