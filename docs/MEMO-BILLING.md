@@ -59,22 +59,30 @@ api.timepointai.com      → timepoint-billing     ← YOU ARE BUILDING THIS
 
 ## 3. What Flash Already Has (Don't Rebuild)
 
-Flash has a **complete credit ledger**. Billing should USE it, not duplicate it:
+Flash has a **complete credit ledger** and all billing integration points are **live and deployed**. Billing should USE them, not duplicate them:
 
-| Flash Has | How Billing Uses It |
-|-----------|---------------------|
-| `POST /credits/admin/grant` | Call after Stripe payment to add credits |
+| Flash Endpoint | How Billing Uses It |
+|----------------|---------------------|
+| `POST /users/resolve` | Find-or-create user by `external_id` (Auth0 sub) on first login. Service-key protected. Auto-provisions credit account with signup credits. |
+| `POST /credits/admin/grant` | Grant credits after Stripe/IAP payment. Accepts `transaction_type` param (`stripe_purchase`, `apple_iap`, `subscription_grant`, `refund`). |
 | `GET /credits/balance` | Proxy to show user their balance |
-| `GET /credits/costs` | Proxy to show pricing |
-| `POST /timepoints/generate/sync` | Relay user generation requests |
-| `POST /timepoints/generate/stream` | Relay with SSE streaming |
+| `GET /credits/history` | Proxy to show transaction ledger |
+| `GET /credits/costs` | Proxy to show pricing per operation |
+| `POST /timepoints/generate/sync` | Relay generation (with `X-User-ID` for metered, without for system) |
+| `POST /timepoints/generate/stream` | Relay with SSE streaming passthrough |
 | `PATCH /timepoints/{id}/visibility` | Relay publish requests |
-| `X-Service-Key` middleware | Billing authenticates to Flash with this |
-| `X-Admin-Key` for grants | Billing uses this to grant credits after payment |
-| `TransactionType.STRIPE_PURCHASE` | Flash's ledger already has this enum value |
-| `TransactionType.APPLE_IAP` | Flash's ledger already has this enum value |
-| `TransactionType.SUBSCRIPTION_GRANT` | Flash's ledger already has this enum value |
+
+| Flash Feature | How Billing Uses It |
+|---------------|---------------------|
+| `X-Service-Key` middleware | Billing authenticates to Flash with shared secret |
+| `X-User-ID` header | Billing forwards Auth0 sub; Flash resolves to internal user |
+| `X-Admin-Key` for grants | Billing uses this for credit grants after payment |
+| `callback_url` on generate | Optional — Flash POSTs results on async completion |
+| `request_context` on generate | Opaque context passed through (e.g., billing job ID) |
+| `User.external_id` column | Stores Auth0 sub, used for `X-User-ID` lookup |
 | `BILLING_ENABLED` config flag | Flash expects billing to set this |
+
+**Billing already has `flash_client.py`** — a dedicated httpx client that calls `/users/resolve`, `/credits/admin/grant`, `/credits/balance`, `/credits/costs`, `/timepoints/generate/sync`, and `/timepoints/generate/stream`.
 
 ---
 
@@ -94,7 +102,7 @@ Flash has a **complete credit ledger**. Billing should USE it, not duplicate it:
 3. Auth0 returns JWT to app
 4. App sends JWT with every request to `api.timepointai.com`
 5. Billing validates JWT, extracts `sub` claim
-6. Billing looks up or creates user in Flash (via service key)
+6. Billing calls Flash `POST /users/resolve` with `external_id: {auth0_sub}` → find-or-create user (auto-provisions credit account with signup credits on first login)
 7. Billing forwards request to Flash/Clockchain with `X-User-ID: {auth0_sub}`
 
 ### Developer Flow (api.timepointai.com)
@@ -132,8 +140,8 @@ async def verify_auth0_token(token: str) -> dict:
 3. User completes payment on Stripe
 4. Stripe sends webhook to `POST /api/v1/billing/webhooks/stripe`
 5. Billing verifies webhook signature
-6. Billing calls Flash: `POST /credits/admin/grant` with `X-Admin-Key`
-7. Flash adds credits to user's ledger with `TransactionType.STRIPE_PURCHASE`
+6. Billing calls Flash: `POST /credits/admin/grant` with `X-Admin-Key` and `transaction_type: "stripe_purchase"`
+7. Flash adds credits to user's ledger, tagged as `STRIPE_PURCHASE` in the immutable transaction log
 
 ### Subscription Plans (future)
 
@@ -461,7 +469,7 @@ app.add_middleware(
 | Flash | timepoint-flash-deploy | *(internal)* | Live |
 | Clockchain | timepoint-clockchain | *(internal)* | Building |
 | App | timepoint-app | `app.timepointai.com` | Planned |
-| Billing | timepoint-billing | `api.timepointai.com` | **BUILD THIS** |
+| Billing | timepoint-billing | `api.timepointai.com` | **BUILD THIS** (flash_client.py done) |
 
 ---
 

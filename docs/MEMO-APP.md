@@ -15,11 +15,12 @@
 5. **Navigate time** — jump forward/backward from any scene
 6. **Manage their account** — sign in, buy credits, publish private scenes, view history
 
-The app is a **frontend SPA** that calls two backend services:
-- **timepoint-billing** (`api.timepointai.com`) — auth, credits, generation, payments
-- **timepoint-clockchain** (internal, proxied via billing) — browse, search, graph data
+The app is a **frontend SPA** that calls one backend:
+- **timepoint-billing** (`api.timepointai.com`) — auth, credits, generation, payments, browse/search
 
-The app does NOT call Flash directly. All authenticated and metered requests go through billing.
+The app does NOT call Flash or Clockchain directly. All requests go through billing, which has a built `flash_client.py` and routes browse/search to Clockchain internally.
+
+**Key integration reality**: Flash's billing integration is **fully deployed** — three auth paths, user resolution by external_id, callback URLs, transaction type tagging. Billing already has its Flash client built.
 
 ---
 
@@ -196,15 +197,17 @@ The app should feel like the landing page come alive — monumental Cinzel headi
 2. Redirect to Auth0 Universal Login (`https://{AUTH0_DOMAIN}/authorize`)
 3. User authenticates (email, Google, Apple, GitHub)
 4. Auth0 redirects to `app.timepointai.com/auth/callback` with authorization code
-5. App exchanges code for JWT (via billing or Auth0 directly)
-6. Store JWT in memory (not localStorage — XSS risk) or httpOnly cookie
-7. Include JWT in all requests to `api.timepointai.com`
+5. App exchanges code for JWT (via Auth0 SDK — `getAccessTokenSilently()`)
+6. App sends JWT to `POST /api/v1/auth/login` on billing
+7. Billing validates JWT, calls Flash `POST /users/resolve` with `external_id: {auth0_sub}` → auto-creates user + credit account (50 signup credits) if first login
+8. Store JWT in memory (not localStorage — XSS risk) or httpOnly cookie
+9. Include JWT in all requests to `api.timepointai.com`
 
 ### Token Refresh
 
-- JWT expiry: 15 minutes (configurable)
-- Use Auth0 refresh token (stored as httpOnly cookie) to get new JWT silently
-- Or use billing's `/auth/refresh` endpoint
+- Auth0 JWT expiry: 15 minutes (configurable)
+- Use Auth0 SDK `getAccessTokenSilently()` — handles refresh automatically via rotating refresh tokens
+- Falls back to re-login if refresh fails
 
 ### Unauthenticated Access
 
@@ -379,7 +382,7 @@ NEXT_PUBLIC_API_BASE=https://api.timepointai.com
 2. Browse moments by era/year/month
 3. Click a public Layer 2 moment → see metadata preview, "Sign in to view full scene"
 4. Search for events → see results with metadata
-5. Click "Sign In" → Auth0 → redirected back with free account + 50 credits
+5. Click "Sign In" → Auth0 → redirected back → billing calls Flash `/users/resolve` → account auto-created with 50 free credits
 
 ### Returning User (logged in)
 
@@ -447,10 +450,10 @@ NEXT_PUBLIC_API_BASE=https://api.timepointai.com
 | Service | Repo | Domain | Status |
 |---------|------|--------|--------|
 | Landing | timepoint-landing | `timepointai.com` | Live |
-| Flash | timepoint-flash-deploy | *(internal)* | Live |
+| Flash | timepoint-flash-deploy | *(internal)* | Live (billing integration deployed) |
 | Clockchain | timepoint-clockchain | *(internal)* | Building |
 | App | timepoint-app | `app.timepointai.com` | **BUILD THIS** |
-| Billing | timepoint-billing | `api.timepointai.com` | Planned |
+| Billing | timepoint-billing | `api.timepointai.com` | Building (flash_client.py done) |
 
 ---
 

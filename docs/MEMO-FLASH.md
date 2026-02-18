@@ -32,21 +32,40 @@ api.timepointai.com      → timepoint-billing     (Auth0, Stripe, API keys, met
 
 ---
 
-## What Flash Needs to Support
+## What Flash Has Implemented (all complete)
 
-### 1. Auth0 JWT Verification (replacing/supplementing Apple Sign-In)
+All integration points are **live and deployed**. No further Flash changes needed.
 
-Flash currently validates Apple identity tokens directly. Auth0 wraps Apple Sign-In as a social connection AND adds web-friendly login (email, Google, GitHub).
+### 1. Three Auth Paths
 
-Two integration paths:
-- **Path A (recommended):** timepoint-billing validates Auth0 JWTs, resolves user identity, calls Flash with service key + `X-User-ID` header. Flash trusts the forwarded identity. Minimal Flash changes.
-- **Path B:** Flash validates Auth0 JWTs directly alongside Apple tokens. More self-contained but duplicates Auth0 config across services.
+| Auth Path | Headers | Use Case | Credits? |
+|-----------|---------|----------|----------|
+| **Service key + X-User-ID** | `X-Service-Key` + `X-User-ID` | Billing relays user requests | Yes (user's credits) |
+| **Service key only** | `X-Service-Key` (no X-User-ID) | Clockchain system calls | No (unmetered) |
+| **Bearer JWT** | `Authorization: Bearer <token>` | Direct user auth (iOS app) | Yes |
 
-Either way, Flash's User model needs to evolve from `apple_sub` to a more generic `auth_provider_sub` (or keep `apple_sub` and add `auth0_sub`).
+This is **Path A** — billing validates Auth0 JWTs, resolves user identity, calls Flash with service key + forwarded `X-User-ID`.
 
-### 2. Service-to-Service Credit Grants
+### 2. User Identity: `external_id` Column
 
-timepoint-billing will call Flash to grant credits after Stripe/IAP payments:
+`User.external_id` added (migration 0009): `String(255)`, unique, indexed, nullable. Holds Auth0 `sub` or any external provider ID. Used as fallback lookup when `X-User-ID` doesn't match a UUID primary key. Flash no longer limited to `apple_sub`.
+
+### 3. User Resolution Endpoint
+
+```
+POST /api/v1/users/resolve
+Headers: X-Service-Key: {FLASH_SERVICE_KEY}
+Body: {
+  "external_id": "auth0|abc123",
+  "email": "user@example.com",      // optional
+  "display_name": "Jane Doe"        // optional
+}
+Response: { "user_id": "flash-uuid", "created": true }
+```
+
+Find-or-create by `external_id`. On first create: provisions user + credit account with signup credits.
+
+### 4. Service-to-Service Credit Grants (with transaction_type)
 
 ```
 POST /api/v1/credits/admin/grant
@@ -54,43 +73,22 @@ Headers: X-Admin-Key: {ADMIN_API_KEY}
 Body: {
   "user_id": "uuid",
   "amount": 100,
+  "transaction_type": "stripe_purchase",
   "description": "Stripe purchase: 100 credits ($9.99)"
 }
 ```
 
-This endpoint **already exists**. Billing just needs the `ADMIN_API_KEY`.
+`transaction_type` parameter accepts: `signup_bonus`, `generation`, `chat`, `temporal`, `admin_grant`, `apple_iap`, `stripe_purchase`, `subscription_grant`, `refund`.
 
-### 3. Service Key Calls from Clockchain
+### 5. Callback URL + Request Context
 
-Clockchain workers generate scenes autonomously (unmetered, system-level):
+All generate endpoints accept:
+- `callback_url` (string, optional) — Flash POSTs full result on completion
+- `request_context` (dict, optional) — opaque context passed through to response
 
-```
-POST /api/v1/timepoints/generate/sync
-Headers: X-Service-Key: {FLASH_SERVICE_KEY}
-Body: {"query": "Rome, 15 March 44 BCE", "preset": "balanced"}
-```
+### 6. CORS Control
 
-Flash should handle service-key-only calls (no user context) as system generations:
-- No credits deducted
-- `visibility: PUBLIC`
-- `user_id: null`
-
-### 4. Calls from Billing (user-initiated, metered)
-
-Billing relays user generation requests after verifying auth + checking credits:
-
-```
-POST /api/v1/timepoints/generate/stream
-Headers: X-Service-Key: {FLASH_SERVICE_KEY}
-         X-User-ID: {auth0_user_id}
-Body: {"query": "...", "preset": "hd"}
-```
-
-Flash looks up or creates the user, deducts credits, generates.
-
-### 5. CORS
-
-If Flash is always called server-to-server (never directly from browser), disable CORS (`CORS_ENABLED=false`). All browser requests go through timepoint-billing (api.timepointai.com) or timepoint-app's backend.
+`CORS_ENABLED=false` disables CORS entirely. Flash is internal-only — all browser requests go through billing.
 
 ---
 
@@ -117,15 +115,17 @@ If Flash is always called server-to-server (never directly from browser), disabl
 app.timepointai.com ──► timepoint-billing ──► FLASH (auth, credits, generate)
 (frontend SPA)          (api.timepointai.com)     ▲
                         (Auth0, Stripe, keys)     │
-                                                  │ service key
+                        Uses flash_client.py      │ X-Service-Key + X-User-ID
+                        to call Flash directly    │
+                                                  │
 developer ─────────► timepoint-billing ───────────┘
 (API key)                                         ▲
-                                                  │ service key (unmetered)
+                                                  │ X-Service-Key (unmetered)
                      timepoint-clockchain ────────┘
                      (autonomous workers)
 ```
 
-Flash is the **execution engine**. Billing is the **front door**. Clockchain is the **autonomous operator**.
+Flash is the **execution engine**. Billing is the **front door** (and already has `flash_client.py` built). Clockchain is the **autonomous operator**.
 
 ---
 

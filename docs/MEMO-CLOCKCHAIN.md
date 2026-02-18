@@ -32,16 +32,18 @@ This is a **lightweight implementation** — NOT the full decentralized protocol
 
 ### What Already Exists in Flash
 
-Flash is mature (630+ tests). It **already has**:
-- **Auth**: Apple Sign-In + JWT (Auth0 being added via timepoint-billing)
-- **Credit ledger**: Immutable transaction log, per-operation costs, admin grants
-- **Billing hooks**: `BILLING_ENABLED` flag, `TransactionType` enum with `STRIPE_PURCHASE`, `APPLE_IAP`, `SUBSCRIPTION_GRANT`, `REFUND`
+Flash is mature (630+ tests). All billing integration points are **live and deployed**:
+- **Three auth paths**: Service key + X-User-ID (billing relay), service key only (Clockchain workers), Bearer JWT (direct)
+- **User resolution**: `POST /users/resolve` — find-or-create by `external_id` (Auth0 sub), auto-provisions credits
+- **Credit ledger**: Immutable transaction log, per-operation costs, admin grants with `transaction_type` param
+- **Callback URLs**: Generate endpoints accept `callback_url` + `request_context` for async workflows
 - **Service key middleware**: `X-Service-Key` header, `X-Admin-Key` for privileged ops
 - **Public/private visibility**: On the Timepoint model
 - **Generation**: Streaming SSE, 4 presets (hd/balanced/hyper/gemini3)
 - **Character interactions**: Chat, dialog, surveys
 - **Temporal navigation**: Jump forward/backward in time
 - **Slug generation**: Auto-generated from query
+- **CORS control**: `CORS_ENABLED=false` makes Flash internal-only
 
 **Clockchain does NOT replicate any of this.** Auth and credits live in Flash (managed via billing). Clockchain is the graph engine and autonomous operator.
 
@@ -362,10 +364,15 @@ GET /api/v1/jobs/{job_id}
 
 | Endpoint | Purpose |
 |----------|---------|
-| `POST /api/v1/timepoints/generate/sync` | Generate scene (service key, no credits) |
+| `POST /api/v1/timepoints/generate/sync` | Generate scene synchronously (service key, no credits) |
+| `POST /api/v1/timepoints/generate` | Async generation with `callback_url` (Flash POSTs result on completion) |
 | `GET /api/v1/timepoints/{id}` | Fetch scene by ID |
 | `GET /api/v1/timepoints/slug/{slug}` | Lookup by slug |
 | `PATCH /api/v1/timepoints/{id}/visibility` | Set public/private |
+
+All generate endpoints also accept:
+- `callback_url` (string) — Flash POSTs full result to this URL on completion
+- `request_context` (dict) — opaque context passed through (e.g., `{"job_id": "...", "graph_path": "..."}`)
 
 ### Calling Flash
 
@@ -375,12 +382,18 @@ import os
 
 FLASH_URL = os.environ["FLASH_URL"]
 FLASH_KEY = os.environ["FLASH_SERVICE_KEY"]
+CLOCKCHAIN_URL = os.environ.get("CLOCKCHAIN_URL", "http://localhost:8000")
 
-async def generate_scene(query: str, preset: str = "balanced") -> dict:
+async def generate_scene(query: str, preset: str = "balanced", job_id: str = None) -> dict:
     async with httpx.AsyncClient(timeout=120) as client:
         response = await client.post(
             f"{FLASH_URL}/api/v1/timepoints/generate/sync",
-            json={"query": query, "preset": preset},
+            json={
+                "query": query,
+                "preset": preset,
+                "callback_url": f"{CLOCKCHAIN_URL}/api/v1/callback/{job_id}" if job_id else None,
+                "request_context": {"job_id": job_id} if job_id else None,
+            },
             headers={"X-Service-Key": FLASH_KEY},
         )
         return response.json()
