@@ -1,10 +1,10 @@
 # TIMEPOINT Landing Page
 
-Static teaser landing page for TIMEPOINT — an AI-powered historical scene generator.
+Static landing page for TIMEPOINT AI at `timepointai.com`.
 
 ## Stack
 
-- Pure HTML + CSS (no JavaScript, no build step)
+- Pure HTML + CSS (single file, no build step)
 - nginx:alpine container
 - Deployed on Railway
 
@@ -19,12 +19,4 @@ docker run -p 8080:8080 timepoint-landing
 
 ## Deployment
 
-Push to `main` — Railway auto-deploys to dev and production.
-
-## Rollback
-
-To restore the full API backend:
-
-```bash
-git push origin archive/v2-api-backend:main --force
-```
+Push to `main` — Railway auto-deploys.

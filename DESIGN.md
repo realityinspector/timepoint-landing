@@ -228,7 +228,7 @@ The landing page implements this system as a single self-contained HTML file wit
 
 ### File Locations
 
-- `index.html` — Landing page (served by FastAPI at `/`)
+- `index.html` — Landing page (served by nginx)
 - `docs/images/alphago-move37.jpeg` — Hero scene image
 - `DESIGN.md` — This document
 

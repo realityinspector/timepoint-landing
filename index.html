@@ -543,7 +543,7 @@
             <p class="hero-sub fade-in d3">Render any moment in human history. Simulate the causal chains that connect them. Score what happens next.</p>
             <div class="hero-ctas fade-in d4">
                 <a href="#system" class="cta">EXPLORE THE LAB</a>
-                <a href="https://timepoint-flash-deploy-production.up.railway.app/docs" class="cta-secondary">TRY FLASH — LIVE API</a>
+                <a href="https://api.timepointai.com/docs" class="cta-secondary">TRY FLASH — LIVE API</a>
             </div>
         </div>
     </section>
@@ -597,7 +597,7 @@
             </div>
 
             <div class="clockchain-callout fade-in d3">
-                <p><strong>The Clockchain Protocol</strong> — Read <a href="https://www.seanmcdonald.xyz/p/the-clockchain-protocol-the-l1-for">the 2022 blog post</a> that first proposed decentralized timekeeping as infrastructure — written before LLMs made temporal reconstruction practical. The vision predates the tools; now the tools exist. Check back soon for updates on the Clockchain project.</p>
+                <p><strong>The Clockchain Protocol</strong> — Read <a href="https://www.seanmcdonald.xyz/p/the-clockchain-protocol-the-l1-for">the 2022 blog post</a> that first proposed decentralized timekeeping as infrastructure — written before LLMs made temporal reconstruction practical. The vision predates the tools; now the tools exist. The Clockchain is live: a spatiotemporal graph index with autonomous expansion, browse/search APIs, and a content judge — growing 24/7.</p>
             </div>
         </div>
     </section>
@@ -618,7 +618,7 @@
                     <span class="product-badge">Apache 2.0</span>
                 </div>
                 <div class="product-sub">Scene Generation Engine</div>
-                <p>Type a query. Get a complete historical scene: verified location, characters with distinct voices, period-accurate dialog, and a photorealistic AI image. 14 specialized agents, search-verified grounding, critique-retry loops, 3-tier image fallback.</p>
+                <p>Type a query. Get a complete historical scene: verified location, characters with distinct voices, period-accurate dialog, and a photorealistic AI image. 20+ specialized agents, search-verified grounding, critique-retry loops, 3-tier image fallback.</p>
 
                 <div class="pipeline"><span class="node">Judge</span> <span class="arrow">→</span> <span class="node">Grounding</span> <span class="arrow">→</span> <span class="node">Timeline</span> <span class="arrow">→</span> <span class="node">Scene</span>
                                                 <span class="arrow">↓</span>
@@ -628,14 +628,14 @@
                                                 <span class="arrow">↓</span>
                           <span class="node">ImagePrompt</span> <span class="arrow">→</span> <span class="node">Optimizer</span> <span class="arrow">→</span> <span class="node">ImageGen</span></div>
 
-                <a href="https://timepoint-flash-deploy-production.up.railway.app/docs" class="product-demo">TRY FLASH — LIVE API</a>
+                <a href="https://api.timepointai.com/docs" class="product-demo">TRY FLASH — LIVE API</a>
 
                 <div class="product-bench">
                     <div class="product-bench-label">In SNAG Bench</div>
                     <p>Flash's Grounding Agent and Critique Agent serve as the scoring rubric for historical fidelity. Every factual claim in a generated scene is verified against web search. Every dialog line is checked for anachronisms. The survival rate IS the score.</p>
                 </div>
 
-                <div class="product-stats">630+ tests · 14-agent pipeline · search-verified grounding · Apache 2.0</div>
+                <div class="product-stats">630+ tests · 20+ agent pipeline · search-verified grounding · Apache 2.0</div>
                 <a href="https://github.com/timepoint-ai/timepoint-flash" class="product-repo">github.com/timepoint-ai/timepoint-flash</a>
             </div>
 
@@ -956,7 +956,7 @@
                             <span class="terminal-title">GENERATE A SCENE</span>
                         </div>
                         <pre><span class="comment"># Try it now — no auth required</span>
-<span class="prompt">$ </span><span class="cmd">curl -X POST <span class="url">https://timepoint-flash-deploy-production.up.railway.app/api/v1/timepoints/generate/sync</span></span> \
+<span class="prompt">$ </span><span class="cmd">curl -X POST <span class="url">https://api.timepointai.com/api/v1/timepoints/generate/sync</span></span> \
   <span class="flag">-H</span> "Content-Type: application/json" \
   <span class="flag">-d</span> '{"query": "Oppenheimer Trinity test 5:29 AM July 16 1945",
        "preset": "hyper",
@@ -968,7 +968,7 @@
                             <span class="terminal-title">FLASH API ENDPOINTS</span>
                         </div>
                         <pre><span class="comment"># Live API — no auth required</span>
-<span class="comment"># Base: https://timepoint-flash-deploy-production.up.railway.app</span>
+<span class="comment"># Base: https://api.timepointai.com</span>
 
 <span class="comment"># Generate a scene (sync — blocks 30-120s)</span>
 <span class="cmd">POST</span> <span class="url">/api/v1/timepoints/generate/sync</span>
@@ -987,7 +987,7 @@
 <span class="cmd">GET</span>  <span class="url">/api/v1/timepoints/{id}?full=true</span>
 <span class="cmd">GET</span>  <span class="url">/api/v1/timepoints</span></pre>
                     </div>
-                    <p>Swagger docs at <a href="https://timepoint-flash-deploy-production.up.railway.app/docs"><code>/docs</code></a> · Presets: <code>hyper</code> <code>balanced</code> <code>hd</code> <code>gemini3</code></p>
+                    <p>Swagger docs at <a href="https://api.timepointai.com/docs"><code>/docs</code></a> · Presets: <code>hyper</code> <code>balanced</code> <code>hd</code> <code>gemini3</code></p>
                 </div>
 
                 <!-- Daedalus -->
