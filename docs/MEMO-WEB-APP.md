@@ -1,12 +1,12 @@
-# HANDOFF MEMO: timepoint-app Agent
+# HANDOFF MEMO: timepoint-web-app Agent
 **From:** timepoint-landing · Feb 2026
-**Re:** Build the TIMEPOINT app — browse the Clockchain, render scenes, at app.timepointai.com
+**Re:** Build the TIMEPOINT web app — browse the Clockchain, render scenes, at app.timepointai.com
 
 ---
 
 ## 1. What You Are Building
 
-**timepoint-app** is the **user-facing frontend** for TIMEPOINT's platform. It lives at `app.timepointai.com` and gives users a way to:
+**timepoint-web-app** is the **web frontend** for TIMEPOINT's platform. It lives at `app.timepointai.com` and gives users a way to:
 
 1. **Browse the Clockchain** — explore an ever-growing graph of historical moments organized by temporal URLs
 2. **View scenes** — read Flash-generated narratives with images, characters, and dialog
@@ -15,7 +15,9 @@
 5. **Navigate time** — jump forward/backward from any scene
 6. **Manage their account** — sign in, buy credits, publish private scenes, view history
 
-The app is a **frontend SPA** that calls one backend:
+A separate **timepoint-iphone-app** handles the iOS native experience (Apple Sign-In, Apple IAP). This memo covers the **web app only**.
+
+The web app is a **frontend SPA** that calls one backend:
 - **timepoint-flash-deploy** (`api.timepointai.com`) — the unified API gateway
 
 Flash-deploy is the **single entry point**. It handles auth, credits, generation, and proxies to two internal services:
@@ -30,7 +32,7 @@ The app does NOT call billing or clockchain directly. All requests go to `api.ti
 
 ```
 timepointai.com          → timepoint-landing        (static marketing)
-app.timepointai.com      → timepoint-app            ← YOU ARE BUILDING THIS
+app.timepointai.com      → timepoint-web-app         ← YOU ARE BUILDING THIS
 api.timepointai.com      → timepoint-flash-deploy   (THE GATEWAY: auth, credits, generation, proxy)
 (internal)               → timepoint-billing        (Stripe, Apple IAP, subscriptions)
 (internal)               → timepoint-clockchain     (graph index, workers, browse/search)
@@ -55,10 +57,8 @@ api.timepointai.com (timepoint-flash-deploy)
 │  Temporal: jump forward/backward             │
 │                                              │
 │  /api/v1/billing/*  ──► billing (internal)   │
-│  /api/v1/clockchain/* ──► clockchain (*)     │
+│  /api/v1/clockchain/* ──► clockchain          │
 │                                              │
-│  (*) Clockchain proxy needs to be built —    │
-│      see Section 13: Prerequisites           │
 └──────────────────────────────────────────────┘
 ```
 
@@ -93,7 +93,7 @@ GET  /api/v1/billing/stripe/portal        → Stripe Customer Portal URL
 POST /api/v1/billing/apple/verify         → verify Apple IAP transaction
 ```
 
-**Clockchain proxy endpoints** (browse, search, graph — *needs clockchain proxy in flash-deploy*):
+**Clockchain proxy endpoints** (browse, search, graph):
 ```
 GET  /api/v1/clockchain/moments/{path}    → moment metadata from graph
 GET  /api/v1/clockchain/browse/{path}     → hierarchical browsing
@@ -221,7 +221,7 @@ The app should feel like the landing page come alive — monumental Cinzel headi
 
 - Profile (user info)
 - Credit balance + transaction history
-- "Buy Credits" → Stripe Checkout (or Apple IAP on iOS)
+- "Buy Credits" → Stripe Checkout
 - My Timepoints (private + published)
 - Subscription management (via Stripe Customer Portal)
 
@@ -497,7 +497,7 @@ NEXT_PUBLIC_API_BASE=https://api.timepointai.com
 
 1. **SPA, not MPA** — single page app for smooth navigation
 2. **All API calls through flash-deploy** — app calls `api.timepointai.com` only; never calls billing or clockchain directly
-3. **Auth0 React SDK** — handles login, token refresh, session management (web). Apple Sign-In for iOS.
+3. **Auth0 React SDK** — handles login, token refresh, session management
 4. **TIMEPOINT design system** — must match landing page aesthetics exactly
 5. **SSE for generation** — real-time progress, not polling
 6. **Public browse without login** — Layer 0-1 is free, login for Layer 2
@@ -538,17 +538,11 @@ NEXT_PUBLIC_API_BASE=https://api.timepointai.com
 
 ## 13. Prerequisites (Dependencies on Other Services)
 
-### Clockchain Proxy (not yet built)
+### Clockchain Proxy — DONE
 
-The clockchain has a full API (browse, search, today, random, stats, neighbors) but **no public proxy exists** in flash-deploy. The app needs a `clockchain_proxy.py` added to flash-deploy (similar to the existing `billing_proxy.py`) that forwards:
+Flash-deploy now has `clockchain_proxy.py` with 8 read-only endpoints (`browse`, `browse/{path}`, `moments/{path}`, `today`, `random`, `search`, `graph/neighbors/{path}`, `stats`). Gated behind `CLOCKCHAIN_ENABLED=true` + `CLOCKCHAIN_API_KEY`. 530+ tests passing in flash-deploy.
 
-```
-/api/v1/clockchain/*  →  http://timepoint-clockchain.railway.internal:8080/api/v1/*
-```
-
-**This must be built in flash-deploy before the app can access browse/search data.**
-
-### Auth0 Integration
+### Auth0 Integration (not yet built)
 
 Flash-deploy currently supports Apple Sign-In JWT. Auth0 needs to be configured:
 1. Auth0 tenant setup for TIMEPOINT
@@ -563,13 +557,14 @@ Flash-deploy currently supports Apple Sign-In JWT. Auth0 needs to be configured:
 | Service | Repo | Domain | Status |
 |---------|------|--------|--------|
 | Landing | timepoint-landing | `timepointai.com` | Live |
-| Flash-deploy | timepoint-flash-deploy | `api.timepointai.com` | Live (gateway: auth, credits, generation, billing proxy) |
-| Billing | timepoint-billing | *(internal)* | Live v0.3.0 (Stripe, Apple IAP, subscriptions) |
-| Clockchain | timepoint-clockchain | *(internal)* | Live (graph, browse/search, workers) — needs proxy in flash-deploy |
-| App | timepoint-app | `app.timepointai.com` | **BUILD THIS** |
+| Flash-deploy | timepoint-flash-deploy | `api.timepointai.com` | Live (gateway: auth, credits, generation, billing + clockchain proxy) |
+| Billing | timepoint-billing | *(internal)* | Live v0.4.0 (Stripe, Apple IAP, subscriptions, refunds, disputes) |
+| Clockchain | timepoint-clockchain | *(internal)* | Live (graph, browse/search, workers) |
+| Web App | timepoint-web-app | `app.timepointai.com` | **BUILD THIS** |
+| iPhone App | timepoint-iphone-app | *(App Store)* | Live (uses flash-deploy) |
 
 ---
 
 **TIMEPOINT · Synthetic Time Travel**
 
-*"The App is the window into the Clockchain. Every moment in history, browsable, searchable, renderable — standing inside time itself."*
+*"The web app is the window into the Clockchain. Every moment in history, browsable, searchable, renderable — standing inside time itself."*
