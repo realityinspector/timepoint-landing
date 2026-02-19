@@ -1,30 +1,37 @@
 # HANDOFF MEMO: timepoint-billing Agent
 **From:** timepoint-landing · Feb 2026
-**Re:** Build the billing gateway — Auth0, Stripe, API keys, metered relay at api.timepointai.com
+**Re:** Billing microservice — Stripe, Apple IAP, subscriptions (internal, called by flash-deploy)
 
 ---
 
 ## 1. What You Are Building
 
-**timepoint-billing** is the **front door** to TIMEPOINT's platform. It lives at `api.timepointai.com` and handles everything Flash and Clockchain don't:
+**timepoint-billing** is an **internal payment processing microservice**. It handles Stripe, Apple IAP, and subscription management. It is NOT the public-facing API gateway — **flash-deploy** is the gateway at `api.timepointai.com`.
 
-1. **Auth0 identity** — web login (email, Google, GitHub) + Apple Sign-In as social connection
-2. **Stripe payments** — credit purchases, subscriptions
-3. **Developer API keys** — per-developer keys with rate limits and usage tracking
-4. **Metered relay** — proxies generation requests to Flash, deducting credits
-5. **Graph data relay** — proxies browse/search requests to Clockchain
+Billing is called by flash-deploy's billing proxy and by Stripe/Apple webhooks directly.
 
-Billing is a **thin gateway**. It does NOT store scenes, maintain graphs, or run generation pipelines. It authenticates, meters, bills, and forwards.
+### What Billing Does
+1. **Stripe payments** — checkout sessions, webhook handling, subscription lifecycle
+2. **Apple IAP** — receipt verification, webhook handling
+3. **Subscription management** — active/canceled/past_due tracking, periodic credit grants
+4. **Product catalog** — credit packs and subscription tiers with pricing
+
+### What Billing Does NOT Do
+- ~~Auth0 identity~~ → flash-deploy handles JWT auth
+- ~~API keys~~ → not yet built (future)
+- ~~Usage metering~~ → not yet built (future)
+- ~~Clockchain proxy~~ → flash-deploy handles this
+- ~~Credit ledger~~ → Flash's DB owns the ledger; billing calls Flash to grant/spend
 
 ---
 
-## 2. Full Service Map
+## 2. Full Service Map (As Built)
 
 ```
 timepointai.com          → timepoint-landing     (static marketing)
 app.timepointai.com      → timepoint-app         (frontend SPA)
-api.timepointai.com      → timepoint-billing     ← YOU ARE BUILDING THIS
-(internal)               → timepoint-flash       (credit ledger + generation)
+api.timepointai.com      → timepoint-flash-deploy (THE GATEWAY)
+(internal)               → timepoint-billing     ← THIS SERVICE
 (internal)               → timepoint-clockchain  (graph index + workers)
 ```
 
@@ -34,445 +41,325 @@ api.timepointai.com      → timepoint-billing     ← YOU ARE BUILDING THIS
                     app.timepointai.com
                     (timepoint-app SPA)
                            │
-                    Auth0 JWT in every request
+                    JWT in every request
                            │
                            ▼
                     api.timepointai.com
                     ┌──────────────────┐
-                    │ BILLING GATEWAY  │ ← YOU
+                    │ FLASH-DEPLOY     │  (the gateway)
+                    │ (auth, credits,  │
+                    │  generation)     │
                     │                  │
-                    │ Auth0 verify     │
-                    │ Stripe webhooks  │
-                    │ API key mgmt    │
-                    │ Usage metering   │
-                    │ Credit relay     │
-                    └──┬───────────┬───┘
+                    │ /api/v1/billing/ │──► BILLING (you)
+                    │   proxy layer    │   /internal/billing/*
+                    └──┬───────────────┘
+                       │           ▲
+              forward user         │ callback: grant/spend/check
+              identity via         │ /internal/credits/*
+              X-Service-Key +      │
+              X-User-Id            │
                        │           │
-              service key    service key
-                       │           │
-                       ▼           ▼
-                    FLASH      CLOCKCHAIN
-                 (generate)   (browse/search)
+                       ▼           │
+                    FLASH-DEPLOY's credit ledger
+```
+
+```
+Stripe webhooks    ──► POST /webhooks/stripe     (direct, signature-verified)
+Apple webhooks     ──► POST /webhooks/apple      (direct, signature-verified)
 ```
 
 ---
 
-## 3. What Flash Already Has (Don't Rebuild)
+## 3. Current Status (v0.3.0, 5 commits)
 
-Flash has a **complete credit ledger** and all billing integration points are **live and deployed**. Billing should USE them, not duplicate them:
+### What's Built
 
-| Flash Endpoint | How Billing Uses It |
-|----------------|---------------------|
-| `POST /users/resolve` | Find-or-create user by `external_id` (Auth0 sub) on first login. Service-key protected. Auto-provisions credit account with signup credits. |
-| `POST /credits/admin/grant` | Grant credits after Stripe/IAP payment. Accepts `transaction_type` param (`stripe_purchase`, `apple_iap`, `subscription_grant`, `refund`). |
-| `GET /credits/balance` | Proxy to show user their balance |
-| `GET /credits/history` | Proxy to show transaction ledger |
-| `GET /credits/costs` | Proxy to show pricing per operation |
-| `POST /timepoints/generate/sync` | Relay generation (with `X-User-ID` for metered, without for system) |
-| `POST /timepoints/generate/stream` | Relay with SSE streaming passthrough |
-| `PATCH /timepoints/{id}/visibility` | Relay publish requests |
+| Feature | Status |
+|---------|--------|
+| FastAPI microservice | Done |
+| `flash_client.py` — calls Flash for user resolve, admin grant, balance, costs, generation | Done |
+| `credits_client.py` — calls Flash's `/internal/credits/*` for grant/spend/check | Done |
+| Stripe Checkout sessions | Done |
+| Stripe webhook handler (checkout.session.completed, invoice.paid, payment_failed) | Done |
+| Stripe subscription lifecycle (create, update, delete, period tracking) | Done |
+| Stripe Customer Portal | Done |
+| Apple IAP verification (JWS signed transaction) | Done |
+| Apple App Store Server webhooks | Scaffolded |
+| Product catalog (4 credit packs, 3 subscription tiers) | Done |
+| SQLAlchemy models (ApplePurchase, StripeCustomer, BillingSubscription) | Done |
+| Alembic migrations | Done |
+| Service key auth (X-Service-Key) | Done |
+| Health check | Done |
 
-| Flash Feature | How Billing Uses It |
-|---------------|---------------------|
-| `X-Service-Key` middleware | Billing authenticates to Flash with shared secret |
-| `X-User-ID` header | Billing forwards Auth0 sub; Flash resolves to internal user |
-| `X-Admin-Key` for grants | Billing uses this for credit grants after payment |
-| `callback_url` on generate | Optional — Flash POSTs results on async completion |
-| `request_context` on generate | Opaque context passed through (e.g., billing job ID) |
-| `User.external_id` column | Stores Auth0 sub, used for `X-User-ID` lookup |
-| `BILLING_ENABLED` config flag | Flash expects billing to set this |
+### What's NOT Built
 
-**Billing already has `flash_client.py`** — a dedicated httpx client that calls `/users/resolve`, `/credits/admin/grant`, `/credits/balance`, `/credits/costs`, `/timepoints/generate/sync`, and `/timepoints/generate/stream`.
+| Feature | Status |
+|---------|--------|
+| Auth0 JWT validation | Not needed (flash-deploy handles auth) |
+| API key management (developer keys) | Future |
+| Usage metering | Future |
+| Rate limiting | Future |
+| CORS | Not needed (internal only, webhooks are direct) |
 
 ---
 
-## 4. Auth0 Integration
+## 4. Architecture: Who Calls Whom
 
-### Setup
+### Flash-deploy → Billing (via billing proxy)
 
-- Auth0 tenant for TIMEPOINT
-- **Social connections**: Apple Sign-In (iOS users migrate seamlessly), Google, GitHub, email/password
-- **Machine-to-machine (M2M) applications**: for developer API keys
-- **API audience**: `https://api.timepointai.com`
+Flash-deploy proxies these requests from the app to billing:
 
-### User Flow (app.timepointai.com)
+| Flash-deploy Route | Billing Route | Purpose |
+|-------------------|---------------|---------|
+| `GET /api/v1/billing/products` | `GET /internal/billing/products` | List credit packs + subscriptions |
+| `GET /api/v1/billing/status` | `GET /internal/billing/status` | User's subscription status |
+| `POST /api/v1/billing/stripe/checkout` | `POST /internal/billing/stripe/checkout` | Create Stripe Checkout session |
+| `GET /api/v1/billing/stripe/portal` | `GET /internal/billing/stripe/portal` | Stripe Customer Portal URL |
+| `POST /api/v1/billing/apple/verify` | `POST /internal/billing/apple/verify` | Verify Apple IAP |
 
-1. User clicks "Sign In" in timepoint-app
-2. Auth0 Universal Login opens (or Apple Sign-In on iOS)
-3. Auth0 returns JWT to app
-4. App sends JWT with every request to `api.timepointai.com`
-5. Billing validates JWT, extracts `sub` claim
-6. Billing calls Flash `POST /users/resolve` with `external_id: {auth0_sub}` → find-or-create user (auto-provisions credit account with signup credits on first login)
-7. Billing forwards request to Flash/Clockchain with `X-User-ID: {auth0_sub}`
+Flash-deploy forwards user identity via headers:
+```
+X-Service-Key: {BILLING_API_KEY}
+X-User-Id: {flash_user_uuid}
+X-User-Email: {user_email}
+```
 
-### Developer Flow (api.timepointai.com)
+### Billing → Flash-deploy (via flash_client.py)
 
-1. Developer signs up via Auth0
-2. Developer creates API key in billing dashboard
-3. API key is stored in billing's DB (hashed)
-4. Developer sends `Authorization: Bearer {api_key}` with requests
-5. Billing validates key, resolves user, meters usage, relays to Flash/Clockchain
+After a successful payment, billing calls Flash to grant credits:
 
-### JWT Validation
+| Billing Calls | Flash Endpoint | Purpose |
+|--------------|----------------|---------|
+| `resolve_user()` | `POST /api/v1/users/resolve` | Find-or-create user by external_id |
+| `admin_grant_credits()` | `POST /api/v1/credits/admin/grant` | Grant credits after payment |
+| `get_balance()` | `GET /api/v1/credits/balance` | Query user balance |
+| `get_costs()` | `GET /api/v1/credits/costs` | Get credit cost table |
+| `relay_generate_sync()` | `POST /api/v1/timepoints/generate/sync` | Relay generation |
+| `relay_generate_stream()` | `POST /api/v1/timepoints/generate/stream` | Relay SSE generation |
 
-```python
-from authlib.integrations.starlette_client import OAuth
-# Or use PyJWT with Auth0's JWKS endpoint
+Uses headers:
+```
+X-Service-Key: {FLASH_SERVICE_KEY}      # service auth
+X-Admin-Key: {FLASH_ADMIN_KEY}          # for admin grants
+X-User-ID: {user_id}                    # for metered calls
+```
 
-AUTH0_DOMAIN = os.environ["AUTH0_DOMAIN"]
-AUTH0_AUDIENCE = os.environ["AUTH0_AUDIENCE"]
+### External → Billing (webhooks, direct)
 
-async def verify_auth0_token(token: str) -> dict:
-    # Validate JWT signature against Auth0 JWKS
-    # Verify audience, issuer, expiry
-    # Return decoded claims with 'sub' field
-    ...
+```
+Stripe  → POST /webhooks/stripe   (signature-verified, no proxy)
+Apple   → POST /webhooks/apple    (signature-verified, no proxy)
 ```
 
 ---
 
-## 5. Stripe Integration
+## 5. Products & Pricing
 
-### Credit Purchases
+### Credit Packs (one-time)
+
+| Product ID | Name | Credits | Price |
+|------------|------|---------|-------|
+| `com.timepoint.flash.credits.10` | Starter | 10 | $2.99 |
+| `com.timepoint.flash.credits.50` | Explorer | 50 | $9.99 |
+| `com.timepoint.flash.credits.150` | Creator | 150 | $24.99 |
+| `com.timepoint.flash.credits.500` | Studio | 500 | $69.99 |
+
+### Subscriptions (monthly)
+
+| Product ID | Name | Credits/Month | Price |
+|------------|------|---------------|-------|
+| `com.timepoint.flash.sub.explorer` | Explorer | 100 | $7.99/mo |
+| `com.timepoint.flash.sub.creator` | Creator | 300 | $19.99/mo |
+| `com.timepoint.flash.sub.studio` | Studio | 1,000 | $49.99/mo |
+
+---
+
+## 6. Stripe Integration (Built)
+
+### Checkout Flow
 
 1. User clicks "Buy Credits" in app
-2. App calls `POST /api/v1/billing/checkout` → Billing creates Stripe Checkout session
-3. User completes payment on Stripe
-4. Stripe sends webhook to `POST /api/v1/billing/webhooks/stripe`
-5. Billing verifies webhook signature
-6. Billing calls Flash: `POST /credits/admin/grant` with `X-Admin-Key` and `transaction_type: "stripe_purchase"`
-7. Flash adds credits to user's ledger, tagged as `STRIPE_PURCHASE` in the immutable transaction log
+2. App calls `POST /api/v1/billing/stripe/checkout` → flash-deploy proxies to billing
+3. Billing creates Stripe Checkout session with `metadata: {user_id, product_id}`
+4. Returns `checkout_url` → app redirects user
+5. User completes payment on Stripe
+6. Stripe sends webhook to `POST /webhooks/stripe` (direct to billing)
+7. Billing verifies signature, dispatches to handler:
+   - **checkout.session.completed** → `flash_client.admin_grant_credits(transaction_type="stripe_purchase")`
+   - **invoice.paid** → grant subscription renewal credits (`transaction_type="subscription_grant"`)
+   - **invoice.payment_failed** → mark subscription `past_due`
+   - **customer.subscription.updated/deleted** → update subscription status
 
-### Subscription Plans (future)
+### Subscription Lifecycle
 
-| Plan | Credits/Month | Price | HD Access |
-|------|---------------|-------|-----------|
-| Free | 0 (browse only) | $0 | No |
-| Explorer | 50 | $4.99 | No |
-| Historian | 200 | $14.99 | Yes |
-| API Pro | 1000 | $49.99 | Yes + API key |
-
-### Apple IAP (iOS)
-
-1. User purchases in iOS app
-2. App sends receipt to `POST /api/v1/billing/verify-receipt`
-3. Billing validates with Apple's receipt verification API
-4. Billing grants credits via Flash's admin endpoint with `TransactionType.APPLE_IAP`
+- New subscription: creates `BillingSubscription` record, grants initial credits
+- Renewal: `invoice.paid` webhook grants periodic credits
+- Cancellation: marks subscription expired
+- Past due: marks subscription past_due on payment failure
 
 ---
 
-## 6. API Key Management
+## 7. Apple IAP (Built)
 
-### Developer API Keys
+### Verification Flow
+
+1. iOS user purchases in-app
+2. App sends signed transaction to `POST /api/v1/billing/apple/verify`
+3. Flash-deploy proxies to billing `POST /internal/billing/apple/verify`
+4. Billing verifies JWS signature
+5. Idempotency check (by `originalTransactionId`)
+6. Resolves product → credits
+7. Calls `flash_client.admin_grant_credits(transaction_type="apple_iap")`
+8. Records `ApplePurchase` in billing DB
+
+---
+
+## 8. Database Models
+
+Billing has its own PostgreSQL database (NOT Flash's). `user_id` is a plain string (Flash UUID), no foreign key.
 
 ```python
-class APIKey(Base):
-    __tablename__ = "api_keys"
+class ApplePurchase(Base):
+    user_id: str                    # Flash user UUID
+    apple_original_transaction_id: str  # Unique, idempotency key
+    product_id: str
+    credits_granted: int
+    price_milliunits: int | None
+    currency: str | None
+    status: PurchaseStatus          # completed, refunded
 
-    id: str           # uuid
-    user_id: str      # auth0 sub
-    key_hash: str     # sha256 of the key (never store plaintext)
-    key_prefix: str   # first 8 chars for display (tp_live_abc12345...)
-    name: str         # user-supplied label
-    tier: str         # "free" | "pro" | "enterprise"
-    rate_limit: int   # requests per minute
-    is_active: bool
-    created_at: datetime
-    last_used_at: datetime
-```
+class StripeCustomer(Base):
+    user_id: str                    # Unique per user
+    stripe_customer_id: str         # Unique Stripe ID
 
-### Key Format
-
-```
-tp_live_a1b2c3d4e5f6g7h8i9j0k1l2m3n4
-tp_test_a1b2c3d4e5f6g7h8i9j0k1l2m3n4
-```
-
-Prefix `tp_live_` or `tp_test_` for easy identification.
-
-### Rate Limits by Tier
-
-| Tier | RPM | Concurrent | HD Preset | Cost |
-|------|-----|------------|-----------|------|
-| Free | 10 | 1 | No | $0 |
-| Pro | 60 | 5 | Yes | $49/mo |
-| Enterprise | 300 | 20 | Yes | Custom |
-
----
-
-## 7. API Endpoints
-
-### Auth Endpoints
-
-```
-POST /api/v1/auth/login
-  → Accepts Auth0 JWT, returns session token + user info
-  → Creates user in Flash if first login
-
-GET /api/v1/auth/me
-  → Current user profile
-
-POST /api/v1/auth/logout
-  → Revoke session
-```
-
-### Billing Endpoints
-
-```
-POST /api/v1/billing/checkout
-  → Create Stripe Checkout session for credit purchase
-  → Body: { "package": "100_credits" | "500_credits" | ... }
-  → Returns: { "checkout_url": "https://checkout.stripe.com/..." }
-
-POST /api/v1/billing/webhooks/stripe
-  → Stripe webhook handler (payment completed, subscription events)
-
-POST /api/v1/billing/verify-receipt
-  → Apple IAP receipt validation
-
-GET /api/v1/billing/plans
-  → Available subscription plans and pricing
-```
-
-### Credit Endpoints (proxied to Flash)
-
-```
-GET /api/v1/credits/balance
-  → Proxy to Flash's /credits/balance
-
-GET /api/v1/credits/history
-  → Proxy to Flash's /credits/history
-
-GET /api/v1/credits/costs
-  → Proxy to Flash's /credits/costs
-```
-
-### API Key Endpoints
-
-```
-POST /api/v1/keys
-  → Create new API key
-  → Returns: { "key": "tp_live_...", "prefix": "tp_live_a1b2" }
-  → Key shown ONCE, then only prefix stored
-
-GET /api/v1/keys
-  → List user's API keys (prefix + name + usage stats)
-
-DELETE /api/v1/keys/{key_id}
-  → Revoke an API key
-
-GET /api/v1/keys/{key_id}/usage
-  → Usage statistics for a key
-```
-
-### Generation Relay (proxied to Flash)
-
-```
-POST /api/v1/generate
-  → Verify auth → check credits → relay to Flash
-  → Returns Flash's response
-
-POST /api/v1/generate/stream
-  → Same but with SSE streaming passthrough
-
-GET /api/v1/timepoints/{id}
-  → Proxy to Flash
-```
-
-### Clockchain Relay (proxied to Clockchain)
-
-```
-GET /api/v1/moments/{path}
-  → Proxy to Clockchain's browse API
-
-GET /api/v1/browse/{path}
-  → Proxy to Clockchain
-
-GET /api/v1/today
-  → Proxy to Clockchain
-
-GET /api/v1/search?q={query}
-  → Proxy to Clockchain
-
-GET /api/v1/graph/neighbors/{id}
-  → Proxy to Clockchain
-```
-
----
-
-## 8. Usage Metering
-
-Track every API call:
-
-```python
-class UsageRecord(Base):
-    __tablename__ = "usage_records"
-
-    id: str
+class BillingSubscription(Base):
     user_id: str
-    api_key_id: str | None    # null for session-based access
-    endpoint: str             # e.g., "/api/v1/generate"
-    method: str               # GET, POST
-    status_code: int
-    credits_spent: int        # 0 for reads, N for generation
-    response_time_ms: int
-    preset: str | None        # for generation requests
-    created_at: datetime
+    source: SubscriptionSource      # apple, stripe
+    tier: str                       # explorer, creator, studio
+    stripe_subscription_id: str | None
+    apple_original_transaction_id: str | None
+    status: SubscriptionStatus      # active, canceled, past_due, expired
+    credits_per_period: int
+    current_period_start: datetime | None
+    current_period_end: datetime | None
+    last_grant_at: datetime | None
 ```
-
-Aggregate daily/monthly for billing dashboards and rate limit enforcement.
 
 ---
 
 ## 9. Tech Stack
 
-- **Framework:** FastAPI (consistent with Flash and Clockchain)
-- **Auth:** Auth0 (authlib or PyJWT + JWKS)
-- **Payments:** Stripe Python SDK
-- **Database:** PostgreSQL (user records, API keys, usage — NOT credits, those are in Flash)
+- **Framework:** FastAPI
+- **Payments:** Stripe Python SDK, Apple App Store Server Library
+- **Database:** PostgreSQL (own DB, via SQLAlchemy + asyncpg)
+- **HTTP Client:** httpx (for Flash calls)
+- **Migrations:** Alembic
 - **Deployment:** Railway (Docker)
 - **Python 3.11+**
 
 ### Env Vars
 
 ```bash
-# Auth0
-AUTH0_DOMAIN=your-tenant.auth0.com
-AUTH0_AUDIENCE=https://api.timepointai.com
-AUTH0_CLIENT_ID=...
-AUTH0_CLIENT_SECRET=...
+# Database
+DATABASE_URL=postgresql+asyncpg://...
+
+# Inter-service
+MAIN_APP_INTERNAL_URL=http://timepoint-flash-deploy.railway.internal:8080
+SERVICE_API_KEY=...          # Billing's own key (flash-deploy uses this to call billing)
+FLASH_SERVICE_KEY=...        # Flash's service key (billing uses this to call flash)
+FLASH_ADMIN_KEY=...          # Flash's admin key (for credit grants)
 
 # Stripe
 STRIPE_SECRET_KEY=sk_live_...
+STRIPE_PUBLISHABLE_KEY=pk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_PRICE_100_CREDITS=price_...
-STRIPE_PRICE_500_CREDITS=price_...
 
-# Internal services
-FLASH_URL=https://timepoint-flash-deploy-production.up.railway.app
-FLASH_SERVICE_KEY=...          # same key Flash expects
-FLASH_ADMIN_KEY=...            # Flash's ADMIN_API_KEY
-CLOCKCHAIN_URL=https://...     # Clockchain's Railway URL
-CLOCKCHAIN_SERVICE_KEY=...     # Clockchain's service key
+# Apple
+APPLE_BUNDLE_ID=com.timepoint.flash
+APPLE_APP_STORE_KEY_ID=...
+APPLE_APP_STORE_ISSUER_ID=...
+APPLE_APP_STORE_PRIVATE_KEY=...  # Base64-encoded
+APPLE_APP_STORE_ENVIRONMENT=Production
 
-# Billing DB
-DATABASE_URL=postgresql+asyncpg://...
-
-# Application
-ENVIRONMENT=production
+# App URLs (Stripe redirects)
+SUCCESS_URL=https://app.timepointai.com/billing/success
+CANCEL_URL=https://app.timepointai.com/billing/cancel
 ```
 
 ---
 
-## 10. Project Structure
+## 10. Project Structure (As Built)
 
 ```
 timepoint-billing/
-├── app/
-│   ├── __init__.py
-│   ├── main.py              # FastAPI, CORS, middleware
-│   ├── api/
-│   │   ├── __init__.py
-│   │   ├── auth.py           # /auth/login, /auth/me, /auth/logout
-│   │   ├── billing.py        # /billing/checkout, webhooks, verify-receipt
-│   │   ├── keys.py           # /keys CRUD
-│   │   ├── credits.py        # Proxy to Flash /credits/*
-│   │   ├── generate.py       # Proxy to Flash /timepoints/generate
-│   │   └── clockchain.py     # Proxy to Clockchain browse/search
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── auth0.py          # Auth0 JWT validation
-│   │   ├── stripe_client.py  # Stripe integration
-│   │   ├── flash_client.py   # httpx client for Flash
-│   │   ├── clockchain_client.py  # httpx client for Clockchain
-│   │   ├── api_keys.py       # Key generation, hashing, validation
-│   │   ├── metering.py       # Usage tracking
-│   │   └── config.py         # Settings
-│   └── models/
+├── src/
+│   └── timepoint_billing/
 │       ├── __init__.py
-│       ├── db.py             # SQLAlchemy models (APIKey, UsageRecord)
-│       └── schemas.py        # Pydantic models
+│       ├── main.py              # FastAPI app, lifespan, health check
+│       ├── config.py            # BillingSettings (pydantic-settings)
+│       ├── database.py          # AsyncSession, init/close DB
+│       ├── models.py            # ApplePurchase, StripeCustomer, BillingSubscription
+│       ├── products.py          # Credit packs + subscription tier definitions
+│       ├── auth.py              # verify_service_key, get_user_from_headers
+│       ├── routes.py            # /internal/billing/products, /status
+│       ├── flash_client.py      # httpx client for Flash (resolve, grant, balance, generate)
+│       ├── credits_client.py    # httpx client for Flash's /internal/credits/*
+│       ├── stripe_/
+│       │   ├── __init__.py
+│       │   ├── routes.py        # /internal/billing/stripe/checkout, /portal
+│       │   ├── checkout.py      # Stripe Checkout session creation
+│       │   ├── webhooks.py      # POST /webhooks/stripe
+│       │   └── subscriptions.py # Subscription lifecycle handler
+│       └── apple/
+│           ├── __init__.py
+│           ├── routes.py        # /internal/billing/apple/verify
+│           ├── verifier.py      # JWS transaction verification
+│           └── webhooks.py      # POST /webhooks/apple
+├── alembic/                     # Database migrations
 ├── tests/
+├── pyproject.toml
 ├── Dockerfile
-├── railway.json
-├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## 11. CORS
+## 11. What Success Looks Like
 
-Billing IS browser-facing (api.timepointai.com). Set CORS:
+### Done (v0.3.0)
+- [x] FastAPI on Railway with health check
+- [x] Service key auth for incoming requests
+- [x] flash_client.py — resolve users, grant credits, relay generation
+- [x] Stripe Checkout sessions
+- [x] Stripe webhook handler
+- [x] Stripe subscription lifecycle
+- [x] Stripe Customer Portal
+- [x] Apple IAP verification (idempotent)
+- [x] Product catalog (4 packs, 3 subscriptions)
+- [x] SQLAlchemy models + Alembic migrations
 
-```python
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://app.timepointai.com",
-        "https://timepointai.com",
-    ],
-    allow_origin_regex=r"http://localhost:\d+",
-    allow_methods=["GET", "POST", "PATCH", "DELETE"],
-    allow_headers=["*"],
-    allow_credentials=True,
-)
-```
-
----
-
-## 12. Key Design Decisions
-
-1. **Billing is a thin gateway** — does NOT duplicate Flash's credit ledger
-2. **Auth0 for identity** — supports Apple Sign-In (iOS) + web login + M2M
-3. **Stripe for payments** — credit purchases and subscriptions
-4. **API keys managed here** — not in Flash or Clockchain
-5. **Usage metering here** — not in Flash or Clockchain
-6. **Credits live in Flash** — billing calls Flash's admin grant after payment
-7. **PostgreSQL** — needs relational storage for keys, usage, billing records
-8. **FastAPI** — consistent with all services
-9. **Railway** — consistent deployment
-
----
-
-## 13. What Success Looks Like
-
-### Phase 1 (Build Now)
-- [ ] FastAPI on Railway with health check
-- [ ] Auth0 JWT validation working
-- [ ] Proxy browse requests to Clockchain
-- [ ] Proxy generation requests to Flash (with service key)
-- [ ] Credit balance/costs proxied from Flash
-- [ ] CORS for app.timepointai.com
-
-### Phase 2 (Monetization)
-- [ ] Stripe Checkout for credit purchases
-- [ ] Stripe webhook handling
-- [ ] API key CRUD
+### Phase 2 (Future)
+- [ ] API key management (developer keys: tp_live_*, tp_test_*)
 - [ ] Usage metering per key
 - [ ] Rate limiting per tier
-- [ ] Apple IAP receipt validation
-
-### Phase 3 (Scale)
-- [ ] Subscription plans
-- [ ] Usage dashboards
 - [ ] Developer portal / docs
 - [ ] Billing admin panel
+- [ ] Refund handling (Stripe refund webhooks → `flash_client.admin_grant_credits(transaction_type="refund", amount=-N)`)
 
 ---
 
-## 14. Services Reference
+## 12. Services Reference
 
 | Service | Repo | Domain | Status |
 |---------|------|--------|--------|
 | Landing | timepoint-landing | `timepointai.com` | Live |
-| Flash | timepoint-flash-deploy | *(internal)* | Live |
-| Clockchain | timepoint-clockchain | *(internal)* | Building |
+| Flash-deploy | timepoint-flash-deploy | `api.timepointai.com` | Live (the gateway) |
+| Billing | timepoint-billing | *(internal)* | **Live v0.3.0** |
+| Clockchain | timepoint-clockchain | *(internal)* | Live |
 | App | timepoint-app | `app.timepointai.com` | Planned |
-| Billing | timepoint-billing | `api.timepointai.com` | **BUILD THIS** (flash_client.py done) |
 
 ---
 
-**TIMEPOINT · Synthetic Time Travel™**
+**TIMEPOINT · Synthetic Time Travel**
 
-*"Billing is the front door. It decides who gets in, what they can touch, and what it costs. Everything behind it — Flash, Clockchain — just does the work."*
+*"Billing handles the money. Flash-deploy opens the door. Billing just processes the payments and tells Flash to add the credits."*

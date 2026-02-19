@@ -1,24 +1,24 @@
 # HANDOFF MEMO: timepoint-clockchain Agent
 **From:** timepoint-landing · Feb 2026
-**Re:** Build the Clockchain — TIMEPOINT's autonomous temporal index and orchestration service
+**Re:** The Clockchain — TIMEPOINT's spatiotemporal graph index and autonomous content orchestrator
 
 ---
 
-## 1. What You Are Building
+## 1. What You Built
 
-The **Clockchain** is a new microservice: TIMEPOINT's **spatiotemporal graph index and autonomous content orchestrator**. It maintains an ever-growing graph of moments in history, orchestrates scene generation by dispatching jobs to Flash, and serves browse/search data to the TIMEPOINT app.
+The **Clockchain** is TIMEPOINT's **spatiotemporal graph index and autonomous content orchestrator**. It maintains an ever-growing graph of moments in history, orchestrates scene generation by dispatching jobs to Flash, and serves browse/search data.
 
 **The Clockchain does three things:**
 
 1. **Maintains a graph index** (NetworkX) of every catalogued moment — organized by canonical temporal URLs
 2. **Orchestrates scene generation** by deciding what to render, queuing jobs, and dispatching them to Flash
-3. **Serves browse/search/discovery data** to `timepoint-app` and `timepoint-billing`
+3. **Serves browse/search/discovery data** via its API
 
-This is a **lightweight implementation** — NOT the full decentralized protocol from Sean's May 2022 blog post (https://clockchain.notion.site). You're building the pragmatic first step: a persistent autonomous agent populating an ever-expanding temporal library.
+**Status: Fully built and deployed.** 6 commits, 11 test files, all Phase 1 + Phase 2 features complete.
 
 ---
 
-## 2. Full Platform Architecture
+## 2. Full Platform Architecture (As Built)
 
 ### The 5-Service Map
 
@@ -26,24 +26,21 @@ This is a **lightweight implementation** — NOT the full decentralized protocol
 |--------|------|---------|---------|
 | `timepointai.com` | timepoint-landing | Marketing landing page, static HTML | Yes (no auth) |
 | `app.timepointai.com` | timepoint-app (NEW) | Frontend SPA — browse + render | Yes (Auth0 login) |
-| `api.timepointai.com` | timepoint-billing (NEW) | Auth0, Stripe, API keys, metered relay | Yes (JWT / API keys) |
-| *(internal)* | timepoint-flash | Credit ledger, generation, interactions | No — called by billing + clockchain |
-| *(internal)* | timepoint-clockchain (NEW) | Graph index, autonomous workers | No — called by app + billing |
+| `api.timepointai.com` | timepoint-flash-deploy | THE GATEWAY: auth, credits, generation, proxies | Yes (JWT / API keys) |
+| *(internal)* | timepoint-billing | Stripe, Apple IAP, subscriptions | No — called by flash-deploy |
+| *(internal)* | timepoint-clockchain | Graph index, autonomous workers | No — needs proxy in flash-deploy |
 
 ### What Already Exists in Flash
 
-Flash is mature (630+ tests). All billing integration points are **live and deployed**:
+Flash-deploy is the unified gateway (630+ tests). All billing integration points are **live and deployed**:
 - **Three auth paths**: Service key + X-User-ID (billing relay), service key only (Clockchain workers), Bearer JWT (direct)
 - **User resolution**: `POST /users/resolve` — find-or-create by `external_id` (Auth0 sub), auto-provisions credits
 - **Credit ledger**: Immutable transaction log, per-operation costs, admin grants with `transaction_type` param
 - **Callback URLs**: Generate endpoints accept `callback_url` + `request_context` for async workflows
 - **Service key middleware**: `X-Service-Key` header, `X-Admin-Key` for privileged ops
 - **Public/private visibility**: On the Timepoint model
+- **Billing proxy**: `/api/v1/billing/*` → billing microservice
 - **Generation**: Streaming SSE, 4 presets (hd/balanced/hyper/gemini3)
-- **Character interactions**: Chat, dialog, surveys
-- **Temporal navigation**: Jump forward/backward in time
-- **Slug generation**: Auto-generated from query
-- **CORS control**: `CORS_ENABLED=false` makes Flash internal-only
 
 **Clockchain does NOT replicate any of this.** Auth and credits live in Flash (managed via billing). Clockchain is the graph engine and autonomous operator.
 
@@ -54,41 +51,44 @@ Flash is mature (630+ tests). All billing integration points are **live and depl
 │                          PUBLIC SURFACE                            │
 │                                                                    │
 │  timepointai.com        app.timepointai.com    api.timepointai.com │
-│  (landing)              (app SPA)              (billing gateway)   │
-│  Static HTML            Auth0 login            Auth0 / API keys   │
-│  No API calls           Browse + render        Stripe, metering   │
+│  (landing)              (app SPA)              (flash-deploy)      │
+│  Static HTML            Auth0 login            THE GATEWAY         │
+│  No API calls           Browse + render        Auth, credits, gen  │
 └─────────────────────────┬───────────────────────┬──────────────────┘
                           │                       │
-                   browse + search          relay + meter
+                    all requests           proxies billing
+                    go here                + clockchain (*)
                           │                       │
-┌─────────────────────────▼───────────────────────▼──────────────────┐
-│                        INTERNAL SERVICES                           │
-│                                                                    │
-│  timepoint-clockchain ─────────────────► timepoint-flash           │
-│  (graph + workers)      workers call     (credit ledger + render)  │
-│                         Flash to                                   │
-│  Browse/search API      generate scenes  Called by billing +       │
-│  Graph expansion                         clockchain only           │
-│  "Today in History"                                                │
-└────────────────────────────────────────────────────────────────────┘
+                          ▼                       │
+                    flash-deploy ─────────────────┤
+                    (api.timepointai.com)          │
+                          │                       │
+                          │              ┌────────┴────────┐
+                          │              │                 │
+                          ▼              ▼                 ▼
+                    generation      billing (internal)  clockchain
+                    (built-in)      (Stripe, Apple)     (graph, search)
 ```
+
+(*) **Clockchain proxy needs to be built in flash-deploy** — see Section 17.
 
 ### Who Calls Whom
 
 | Caller | Calls | Purpose | Auth |
 |--------|-------|---------|------|
-| timepoint-app | Clockchain | Browse graph, search, today-in-history | `X-Service-Key` |
-| timepoint-app | timepoint-billing | Generate scenes, auth, buy credits | Auth0 JWT |
-| timepoint-billing | Flash | Relay generation + credit ops | `X-Service-Key` + `X-Admin-Key` |
-| timepoint-billing | Clockchain | Fetch graph data for API consumers | `X-Service-Key` |
-| Clockchain workers | Flash | Autonomous scene generation (unmetered) | `X-Service-Key` |
+| timepoint-app | flash-deploy | Everything (via single API) | JWT |
+| flash-deploy | Clockchain | Proxy browse/search requests (*) | `X-Service-Key` |
+| flash-deploy | Billing | Proxy payment requests | `X-Service-Key` |
+| Billing | Flash-deploy | Grant credits after payment | `X-Service-Key` + `X-Admin-Key` |
+| Clockchain workers | Flash-deploy | Autonomous scene generation (unmetered) | `X-Service-Key` |
 
 ### Auth Architecture
 
-- **Auth0** — identity provider shared by app and billing (supports Apple Sign-In as social connection + email/Google/GitHub for web)
-- **timepoint-billing** — validates Auth0 JWTs, manages API keys, handles Stripe, forwards identity to Flash
-- **Flash** — trusts forwarded `X-User-ID` from billing; owns credit ledger, spend/grant ops
-- **Clockchain** — trusts `X-Service-Key` from app and billing; does NOT validate users or handle credits
+- **Auth0** (planned) — identity provider for web app. Flash-deploy already has `external_id` and `/users/resolve` ready.
+- **Apple Sign-In** — current JWT auth in flash-deploy (iOS)
+- **flash-deploy** — validates JWTs, manages service keys, handles auth flows
+- **Flash** — trusts forwarded `X-User-ID`; owns credit ledger, spend/grant ops
+- **Clockchain** — trusts `X-Service-Key` from flash-deploy; does NOT validate users or handle credits
 - **Service keys** (shared secrets via env vars) for all service-to-service calls
 
 ---
@@ -105,7 +105,7 @@ Flash already has `visibility: PUBLIC | PRIVATE` on its Timepoint model.
 - The ever-growing library — Clockchain generates these 24/7
 
 **Private Timepoints**
-- User-requested via the app → billing verifies credits → Flash generates as `PRIVATE`
+- User-requested via the app → flash-deploy verifies credits → Flash generates as `PRIVATE`
 - Only visible to the requesting user
 - User can **publish** → becomes public, Clockchain indexes it
 - Publishing enriches the library for everyone
@@ -118,10 +118,10 @@ Clockchain maintains the **graph index** of all public timepoints (and reference
 - **Layer 2 reference**: `flash_timepoint_id` pointing to Flash's DB (not the scene itself)
 
 When a user requests a moment:
-1. App checks Clockchain: does this path exist?
+1. App checks Clockchain (via flash-deploy proxy): does this path exist?
 2. If yes (Layer 2): app fetches full scene from Flash by `flash_timepoint_id`
-3. If yes (Layer 0-1 only): app shows metadata, offers to generate (costs credits via billing)
-4. If no: app sends request through billing → Flash generates → Clockchain indexes result
+3. If yes (Layer 0-1 only): app shows metadata, offers to generate (costs credits)
+4. If no: app sends request through flash-deploy → Flash generates → Clockchain indexes result
 
 ---
 
@@ -174,405 +174,240 @@ Partial paths return listings:
 
 Millions of Layer 0 nodes (cheap). Thousands with Layer 2 scenes. Layer 0-1 makes the graph browsable before scenes exist.
 
-### Layer Access by Tier
-
-| Layer | No login | Free (logged in) | Freemium (credits) | Paid API |
-|-------|----------|-------------------|---------------------|----------|
-| 0-1 | Browse | Browse | Browse | Full access |
-| 2 | Preview | Full read (public) | Generate new (private) | Full + HD preset |
-| 3+ | — | — | Future | Future |
-
 ---
 
-## 6. Tech Stack
+## 6. What's Built (Complete)
 
+### Tech Stack
 - **Framework:** FastAPI
-- **Graph:** NetworkX — in-memory, serialized to disk as JSON
-- **Queue:** In-process asyncio queue (graduate to Redis if needed)
-- **Storage:** Filesystem JSON (graduate to SQLite → Postgres if needed)
+- **Graph:** NetworkX — in-memory, serialized to disk as JSON (`nx.node_link_data()`)
+- **Queue:** In-process asyncio (background tasks)
+- **Storage:** Filesystem JSON (`data/graph.json`, `data/scenes/{path}/scene.json`)
 - **Deployment:** Railway (Docker)
 - **Python 3.11+**
+- **Dependencies:** fastapi, uvicorn, pydantic, pydantic-settings, httpx, networkx, google-genai
 
-### Railway Config
+### API Endpoints (All Built)
 
-```json
-{
-  "$schema": "https://railway.com/railway.schema.json",
-  "build": { "builder": "DOCKERFILE", "dockerfilePath": "Dockerfile" },
-  "deploy": {
-    "healthcheckPath": "/health",
-    "healthcheckTimeout": 30,
-    "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 3
-  }
-}
+Auth: `X-Service-Key` header on all endpoints.
+
+**Browse & Discovery:**
+```
+GET /health                              → Graph stats (no auth)
+GET /api/v1/browse                       → Root year segments
+GET /api/v1/browse/{path}                → Hierarchical browsing
+GET /api/v1/moments/{path}               → Full moment data + edges
+GET /api/v1/today                        → Events matching today's date
+GET /api/v1/random                       → Random public moment (Layer 1+)
+GET /api/v1/search?q={query}             → Full-text search with scoring
 ```
 
----
-
-## 7. The Graph (NetworkX)
-
-### Node Schema
-
-```python
-G.add_node("/-44/march/15/1030/italy/lazio/rome/assassination-of-julius-caesar", **{
-    "type": "event",
-    "name": "Assassination of Julius Caesar",
-    "year": -44,
-    "month": "march",
-    "day": 15,
-    "time": "1030",
-    "country": "italy",
-    "region": "lazio",
-    "city": "rome",
-    "slug": "assassination-of-julius-caesar",
-    "layer": 2,
-    "visibility": "public",
-    "created_by": "system",
-    "tags": ["politics", "ancient-rome", "assassination"],
-    "one_liner": "Senators assassinate dictator Julius Caesar on the Ides of March",
-    "figures": ["Julius Caesar", "Marcus Brutus", "Gaius Cassius"],
-    "flash_timepoint_id": "uuid-from-flash",  # null if Layer < 2
-    "created_at": "2026-02-17T00:00:00Z",
-})
+**Graph:**
+```
+GET /api/v1/graph/neighbors/{path}       → Connected nodes + edge metadata
+GET /api/v1/stats                        → Total nodes/edges, layer/edge-type counts
 ```
 
-Clockchain stores metadata + Flash reference. Full scene content lives in Flash's DB.
-
-### Edge Types
-
-```python
-G.add_edge(caesar_node, civil_war_node, type="causes", weight=0.95)
-G.add_edge(event_a, event_b, type="contemporaneous")
-G.add_edge(event_a, event_b, type="same_location")
-G.add_edge(event_a, event_b, type="thematic", theme="assassinations")
+**Generation & Indexing:**
+```
+POST /api/v1/generate                    → Queue scene generation (+ content judge)
+GET  /api/v1/jobs/{job_id}               → Poll job status
+POST /api/v1/moments/{path}/publish      → Set visibility to public
+POST /api/v1/bulk-generate               → Batch generation (admin key)
+POST /api/v1/index                       → Manually add/update node in graph
 ```
 
-### Bulk Slug Generation
+### Workers (All Built, Feature-Gated)
 
-1. Start with seed events (~500 notable moments)
-2. LLM generates related events per seed (causes, effects, contemporaneous, thematic)
-3. Build graph outward — each new node links to what generated it
-4. Serialize to disk periodically
-5. Runs as background worker, expanding autonomously
+1. **Graph Expander** (`EXPANSION_ENABLED=true` + `GOOGLE_API_KEY`) — Gemini 2.0 Flash generates related events for frontier nodes every 300s
+2. **Content Judge** (`GOOGLE_API_KEY`) — Gemini-based screening: approve/sensitive/reject
+3. **Daily Worker** (`DAILY_CRON_ENABLED=true`) — "Today in History" auto-generation, runs every 24h
+4. **Flash Client** — async httpx client to flash-deploy for scene generation with `request_context`
 
----
+### Graph (NetworkX)
 
-## 8. API Endpoints
+Nodes keyed by canonical path. Auto-linking on add:
+- **Contemporaneous**: same year ±1 (weight=0.5)
+- **Same location**: matching country/region/city (weight=0.5)
+- **Thematic**: overlapping tags (weight=0.3)
+- **Causal**: manual edge type
 
-### Browse API (called by timepoint-app and timepoint-billing)
-
-Auth: `X-Service-Key` header.
-
-```
-GET /api/v1/moments/{full_temporal_path}
-  → Moment metadata from graph
-  → If Layer 2: includes flash_timepoint_id (caller fetches scene from Flash)
-  → Public only (unless user_id forwarded for private)
-
-GET /api/v1/browse/{partial_path}
-  → Listing of child nodes, public only, paginated
-
-GET /api/v1/today
-  → Moments on this date in history (public)
-
-GET /api/v1/random
-  → Random public moment (Layer 1+)
-
-GET /api/v1/search?q={query}
-  → Full-text search across names, descriptions, figures, tags
-
-GET /api/v1/graph/neighbors/{node_id}
-  → Connected nodes (causes, effects, related)
-
-GET /api/v1/stats
-  → Total nodes per layer, edges, coverage
-```
-
-### Indexing API (called after Flash generates a scene)
-
-```
-POST /api/v1/index
-  → Add or update a moment in the graph
-  → Body: {
-      "path": "/-44/march/15/...",
-      "flash_timepoint_id": "uuid",
-      "metadata": { name, figures, tags, one_liner, ... },
-      "visibility": "public" | "private",
-      "created_by": "system" | "user:{user_id}"
-    }
-
-POST /api/v1/publish/{path}
-  → Set visibility "public" on a private node
-```
-
-### Worker Management (admin only)
-
-```
-POST /api/v1/expand
-  → Trigger graph expansion from a seed
-  → Body: { "seed": "Roman Republic", "depth": 2, "max_nodes": 100 }
-
-GET /api/v1/jobs/{job_id}
-  → Poll worker job status
-```
-
----
-
-## 9. Autonomous Workers
-
-### Worker 1: Graph Expander (cron)
-
-- Runs on schedule (every N hours, or continuously with rate limiting)
-- Picks frontier nodes (Layer 0, few connections)
-- LLM generates related events
-- Adds new Layer 0/1 nodes — `visibility: "public"`, `created_by: "system"`
-- Serializes graph to disk
-
-### Worker 2: Scene Renderer (queue)
-
-- Watches job queue for moments to promote to Layer 2
-- Calls Flash: `POST /api/v1/timepoints/generate/sync` with `X-Service-Key`
-- No credits deducted (system generation, no user context)
-- Stores `flash_timepoint_id` back in graph node
-- n parallel workers (start with 2-3), handles retries
-
-### Worker 3: "Today in History" (daily cron)
-
-- Midnight UTC: identify events matching today's month+day
-- Ensure Layer 1 data exists for top 10-20
-- Queue top 3-5 for Layer 2 generation via Flash
-- Pre-rendered so `/api/v1/today` returns rich content
-
-### Worker 4: LLM Content Judge
-
-- Screens requests BEFORE dispatching to Flash
-- Three tiers:
-  - **Innocuous** → auto-approve
-  - **Sensitive** (violence, controversial) → generate with disclaimer
-  - **Reject** (harmful) → error, don't generate
-- Lightweight LLM call (Haiku or similar)
-- Saves Flash compute on rejected content
-
----
-
-## 10. Flash Integration
-
-**Flash is live** at `https://timepoint-flash-deploy-production.up.railway.app`
-
-### Flash Endpoints Clockchain Uses
-
-| Endpoint | Purpose |
-|----------|---------|
-| `POST /api/v1/timepoints/generate/sync` | Generate scene synchronously (service key, no credits) |
-| `POST /api/v1/timepoints/generate` | Async generation with `callback_url` (Flash POSTs result on completion) |
-| `GET /api/v1/timepoints/{id}` | Fetch scene by ID |
-| `GET /api/v1/timepoints/slug/{slug}` | Lookup by slug |
-| `PATCH /api/v1/timepoints/{id}/visibility` | Set public/private |
-
-All generate endpoints also accept:
-- `callback_url` (string) — Flash POSTs full result to this URL on completion
-- `request_context` (dict) — opaque context passed through (e.g., `{"job_id": "...", "graph_path": "..."}`)
-
-### Calling Flash
-
-```python
-import httpx
-import os
-
-FLASH_URL = os.environ["FLASH_URL"]
-FLASH_KEY = os.environ["FLASH_SERVICE_KEY"]
-CLOCKCHAIN_URL = os.environ.get("CLOCKCHAIN_URL", "http://localhost:8000")
-
-async def generate_scene(query: str, preset: str = "balanced", job_id: str = None) -> dict:
-    async with httpx.AsyncClient(timeout=120) as client:
-        response = await client.post(
-            f"{FLASH_URL}/api/v1/timepoints/generate/sync",
-            json={
-                "query": query,
-                "preset": preset,
-                "callback_url": f"{CLOCKCHAIN_URL}/api/v1/callback/{job_id}" if job_id else None,
-                "request_context": {"job_id": job_id} if job_id else None,
-            },
-            headers={"X-Service-Key": FLASH_KEY},
-        )
-        return response.json()
-```
-
-### After Flash Generates
-
-1. Extract `id` → store as `flash_timepoint_id` in graph node
-2. Extract metadata (year, location, slug) → enrich Layer 1
-3. Add causal/thematic edges if scene references known events
-4. Update node `layer` to 2
-5. Serialize graph
-
----
-
-## 11. Service Key Auth
-
-### Inbound (callers → Clockchain)
-
-```
-X-Service-Key: {CLOCKCHAIN_SERVICE_KEY}
-```
-
-Set as Railway env var. Share with `timepoint-app` and `timepoint-billing`.
-
-Optional user identity forwarding:
-```
-X-User-ID: auth0|abc123
-```
-
-Clockchain trusts forwarded identity. Auth0 validation happens in billing, not here.
-
-### Outbound (Clockchain → Flash)
-
-```
-X-Service-Key: {FLASH_SERVICE_KEY}
-```
-
-### No CORS
-
-Clockchain is never called from browsers. App and billing backends proxy all requests.
-
----
-
-## 12. Data Persistence
-
-### MVP: Filesystem
-
-```
-data/
-  graph.json              # NetworkX graph as node-link JSON
-  jobs/
-    {job_id}.json          # Worker job status
-```
-
-Scene content lives in Flash's DB, not here. Clockchain stores graph topology + Layer 0/1 metadata + Flash ID references.
-
-### Graduation Path
-
-1. SQLite + FTS5 for search
-2. Postgres
-3. NetworkX stays as in-memory cache
-
----
-
-## 13. Seed Data
+### Seed Data (5 events)
 
 | Event | Path |
 |-------|------|
 | Assassination of Caesar | `/-44/march/15/1030/italy/lazio/rome/assassination-of-julius-caesar` |
 | Trinity Test | `/1945/july/16/0530/united-states/new-mexico/socorro/trinity-test` |
 | Apollo 12 Lightning Launch | `/1969/november/14/1122/united-states/florida/cape-canaveral/apollo-12-lightning-launch` |
+| Apollo 11 Moon Landing | `/1969/july/20/2056/united-states/florida/cape-canaveral/apollo-11-moon-landing` |
 | AlphaGo Move 37 | `/2016/march/9/1530/south-korea/seoul/seoul/alphago-move-37` |
-| Moon Landing | `/1969/july/20/2056/united-states/florida/cape-canaveral/apollo-11-moon-landing` |
 
-All: `visibility: "public"`, `created_by: "system"`.
+Pre-configured edges: Apollo 11 ↔ Apollo 12 (contemporaneous), Trinity → Apollo 11 (causal).
 
 ---
 
-## 14. Project Structure
+## 7. Project Structure (As Built)
 
 ```
 timepoint-clockchain/
 ├── app/
 │   ├── __init__.py
-│   ├── main.py              # FastAPI, startup, service key middleware
+│   ├── main.py              # FastAPI, lifespan, health, workers startup
 │   ├── api/
-│   │   ├── __init__.py
+│   │   ├── __init__.py      # api_router combines all routes
 │   │   ├── moments.py       # /moments, /browse, /today, /random, /search
-│   │   ├── index.py         # /index, /publish
-│   │   └── graph.py         # /graph/neighbors, /stats, /expand
+│   │   ├── generate.py      # /generate, /jobs, /publish, /bulk-generate, /index
+│   │   └── graph.py         # /graph/neighbors, /stats
 │   ├── core/
 │   │   ├── __init__.py
-│   │   ├── graph.py          # NetworkX graph manager
-│   │   ├── url.py            # Canonical URL parsing/building
-│   │   ├── auth.py           # Service key validation
-│   │   └── config.py         # Settings, env vars
+│   │   ├── graph.py          # GraphManager (NetworkX, auto-linking, persistence)
+│   │   ├── jobs.py           # JobManager (create, process, Flash dispatch)
+│   │   ├── url.py            # Canonical URL parsing/building, slugification
+│   │   ├── auth.py           # Service key validation, user ID extraction
+│   │   └── config.py         # Settings (pydantic-settings)
 │   ├── workers/
 │   │   ├── __init__.py
-│   │   ├── expander.py       # Graph expansion
-│   │   ├── renderer.py       # Flash dispatch
-│   │   ├── daily.py          # "Today in History" cron
-│   │   └── judge.py          # LLM content moderation
+│   │   ├── renderer.py       # FlashClient (httpx async)
+│   │   ├── expander.py       # GraphExpander (Gemini, autonomous)
+│   │   ├── judge.py          # ContentJudge (Gemini, approve/reject)
+│   │   └── daily.py          # DailyWorker ("Today in History" cron)
 │   └── models/
 │       ├── __init__.py
-│       └── schemas.py        # Pydantic models
+│       └── schemas.py        # Pydantic request/response models
 ├── data/
-│   ├── seeds.json
-│   └── .gitkeep
-├── tests/
+│   ├── seeds.json            # 5 seed events
+│   └── graph.json            # Persisted graph (auto-created)
+├── tests/                    # 11 test files
+│   ├── conftest.py
+│   ├── test_health.py
+│   ├── test_integration.py   # Full end-to-end workflow
+│   ├── test_api_moments.py
+│   ├── test_generate.py
+│   ├── test_graph.py
+│   ├── test_edges.py
+│   ├── test_url.py
+│   ├── test_expander.py
+│   ├── test_judge.py
+│   └── test_daily.py
+├── docs/
+│   └── UPDATE-FROM-FLASH.md
 ├── Dockerfile
-├── railway.json
-├── requirements.txt
+├── pyproject.toml
+├── .env.example
 └── README.md
 ```
 
 ---
 
-## 15. Key Design Decisions (Already Made)
+## 8. Env Vars
+
+```bash
+SERVICE_API_KEY=your-service-key-here
+FLASH_URL=http://timepoint-flash-deploy.railway.internal:8080
+FLASH_SERVICE_KEY=your-flash-service-key-here
+DATA_DIR=./data
+ENVIRONMENT=development
+DEBUG=false
+PORT=8080
+GOOGLE_API_KEY=                          # Optional (enables judge + expander)
+EXPANSION_ENABLED=false                  # Graph expander worker
+DAILY_CRON_ENABLED=false                 # "Today in History" worker
+ADMIN_KEY=                               # For bulk-generate
+```
+
+---
+
+## 9. Git History
+
+```
+3ff625d Fix volume permissions for Railway deployment
+d52a42a Add Railway volume support for persistent graph data
+d3b463c Fix Flash integration for live deployment
+e8c5fdf docs: add UPDATE-FROM-FLASH memo confirming Flash compatibility
+3b0138e start clockchain
+5cca36b Initial commit
+```
+
+---
+
+## 10. Key Design Decisions (Implemented)
 
 1. **Months spelled out** in URLs — `march` not `03`
 2. **Modern geography** — even for ancient events
 3. **Auto-generated slugs**
-4. **NetworkX** for the graph
+4. **NetworkX** for the graph (in-memory + JSON persistence)
 5. **Flash owns the credit ledger** — Clockchain never handles credits
-6. **timepoint-billing owns auth** (Auth0, Stripe, API keys) — Clockchain trusts service keys
-7. **5-service architecture** — landing, app, billing, clockchain, flash
+6. **Flash-deploy is the gateway** — validates auth, proxies clockchain requests
+7. **5-service architecture** — landing, app, flash-deploy, billing, clockchain
 8. **LLM judge before Flash** — saves compute
-9. **Start simple** — asyncio queue, filesystem, in-memory graph
-10. **Railway** for deployment
+9. **Feature-gated workers** — expander and daily cron are opt-in
+10. **Railway** for deployment with volume persistence
 11. **FastAPI** — consistent with Flash
 12. **Public timepoints are free** — auto-generated by workers
-13. **Private timepoints cost credits** — managed by Flash's ledger via billing
+13. **Private timepoints cost credits** — managed by Flash's ledger
 14. **Scene content in Flash's DB** — Clockchain stores references only
+15. **Auto-linking** — contemporaneous, same-location, and thematic edges created automatically
 
 ---
 
-## 16. What Success Looks Like
+## 11. Completion Status
 
-### Phase 1 (Build Now)
-- [ ] FastAPI service on Railway with health check
-- [ ] Service key middleware
-- [ ] NetworkX graph with 5 seed events (Layer 0-1)
-- [ ] `GET /api/v1/moments/{path}` returns seed data
-- [ ] `GET /api/v1/browse/{partial_path}` returns listings
-- [ ] `GET /api/v1/today` returns today-in-history
-- [ ] Scene Renderer worker: calls Flash, stores `flash_timepoint_id`
-- [ ] Graph Expander worker: adds related events around seeds
-- [ ] `POST /api/v1/index` accepts new moments
-- [ ] Public/private visibility on all nodes
-- [ ] Graph serialized to disk, survives restarts
+### Phase 1 (Done)
+- [x] FastAPI service on Railway with health check
+- [x] Service key middleware
+- [x] NetworkX graph with 5 seed events (Layer 0-1)
+- [x] `GET /api/v1/moments/{path}` returns seed data
+- [x] `GET /api/v1/browse/{partial_path}` returns listings
+- [x] `GET /api/v1/today` returns today-in-history
+- [x] Scene Renderer worker: calls Flash, stores `flash_timepoint_id`
+- [x] Graph Expander worker: adds related events around seeds
+- [x] `POST /api/v1/index` accepts new moments
+- [x] Public/private visibility on all nodes
+- [x] Graph serialized to disk, survives restarts
 
-### Phase 2 (After app + billing exist)
-- [ ] LLM content judge
-- [ ] "Today in History" daily cron
-- [ ] 1000+ Layer 0 nodes
-- [ ] 50+ Layer 2 scenes
-- [ ] Search endpoint
-- [ ] Publish endpoint (private → public)
+### Phase 2 (Done)
+- [x] LLM content judge
+- [x] "Today in History" daily cron
+- [x] Search endpoint
+- [x] Publish endpoint (private → public)
+- [x] Graph neighbors endpoint
+- [x] Stats endpoint
+- [x] Bulk generate (admin)
+- [x] Integration tests (full end-to-end workflow)
 
 ### Phase 3 (Future)
 - [ ] Daedalus (Layer 3) integration
-- [ ] Semantic search
+- [ ] Semantic search (beyond keyword matching)
 - [ ] Graph visualization API
+- [ ] 1000+ Layer 0 nodes
+- [ ] 50+ Layer 2 scenes
 
 ---
 
-## 17. Existing Services
+## 12. Gap: Clockchain Proxy in Flash-Deploy
+
+Clockchain's API works but **is not accessible from the public API**. Flash-deploy needs a `clockchain_proxy.py` (similar to `billing_proxy.py`) that forwards:
+
+```
+/api/v1/clockchain/*  →  CLOCKCHAIN_SERVICE_URL/api/v1/*
+```
+
+This is the **one remaining dependency** before the app can browse the Clockchain.
+
+---
+
+## 13. Services Reference
 
 | Service | Repo | Domain | Status |
 |---------|------|--------|--------|
 | Landing | timepoint-landing | `timepointai.com` | Live |
-| Flash | timepoint-flash-deploy | *(internal)* | Live |
-| Clockchain | timepoint-clockchain | *(internal)* | **BUILD THIS** |
+| Flash-deploy | timepoint-flash-deploy | `api.timepointai.com` | Live (the gateway) |
+| Billing | timepoint-billing | *(internal)* | Live v0.3.0 |
+| Clockchain | timepoint-clockchain | *(internal)* | **Live (all phases complete)** |
 | App | timepoint-app | `app.timepointai.com` | Planned |
-| Billing | timepoint-billing | `api.timepointai.com` | Planned |
 
 ---
 
-**TIMEPOINT · Synthetic Time Travel™**
+**TIMEPOINT · Synthetic Time Travel**
 
-*"Flash renders moments. The Clockchain remembers all of them, connects them, and decides which ones to illuminate next. Billing opens the door. The App is the window."*
+*"Flash renders moments. The Clockchain remembers all of them, connects them, and decides which ones to illuminate next. Flash-deploy opens the door. The App is the window."*

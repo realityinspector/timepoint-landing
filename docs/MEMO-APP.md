@@ -16,49 +16,93 @@
 6. **Manage their account** — sign in, buy credits, publish private scenes, view history
 
 The app is a **frontend SPA** that calls one backend:
-- **timepoint-billing** (`api.timepointai.com`) — auth, credits, generation, payments, browse/search
+- **timepoint-flash-deploy** (`api.timepointai.com`) — the unified API gateway
 
-The app does NOT call Flash or Clockchain directly. All requests go through billing, which has a built `flash_client.py` and routes browse/search to Clockchain internally.
+Flash-deploy is the **single entry point**. It handles auth, credits, generation, and proxies to two internal services:
+- **timepoint-billing** (internal) — Stripe payments, Apple IAP, subscriptions
+- **timepoint-clockchain** (internal) — graph browsing, search, "Today in History"
 
-**Key integration reality**: Flash's billing integration is **fully deployed** — three auth paths, user resolution by external_id, callback URLs, transaction type tagging. Billing already has its Flash client built.
+The app does NOT call billing or clockchain directly. All requests go to `api.timepointai.com`.
 
 ---
 
-## 2. Full Service Map
+## 2. Full Service Map (As Built)
 
 ```
-timepointai.com          → timepoint-landing     (static marketing)
-app.timepointai.com      → timepoint-app         ← YOU ARE BUILDING THIS
-api.timepointai.com      → timepoint-billing     (Auth0, Stripe, API keys, relay)
-(internal)               → timepoint-flash       (credit ledger + generation)
-(internal)               → timepoint-clockchain  (graph index + workers)
+timepointai.com          → timepoint-landing        (static marketing)
+app.timepointai.com      → timepoint-app            ← YOU ARE BUILDING THIS
+api.timepointai.com      → timepoint-flash-deploy   (THE GATEWAY: auth, credits, generation, proxy)
+(internal)               → timepoint-billing        (Stripe, Apple IAP, subscriptions)
+(internal)               → timepoint-clockchain     (graph index, workers, browse/search)
+```
+
+### Architecture (as built)
+
+```
+app.timepointai.com (this SPA)
+        │
+        │  JWT (Auth0 or Apple Sign-In) in every request
+        │
+        ▼
+api.timepointai.com (timepoint-flash-deploy)
+┌──────────────────────────────────────────────┐
+│  FLASH-DEPLOY  (unified gateway)             │
+│                                              │
+│  Auth: JWT (Apple Sign-In + Auth0 planned)   │
+│  Credits: ledger, balance, costs             │
+│  Generation: 20+ AI agents, SSE streaming    │
+│  Characters: chat, dialog, surveys           │
+│  Temporal: jump forward/backward             │
+│                                              │
+│  /api/v1/billing/*  ──► billing (internal)   │
+│  /api/v1/clockchain/* ──► clockchain (*)     │
+│                                              │
+│  (*) Clockchain proxy needs to be built —    │
+│      see Section 13: Prerequisites           │
+└──────────────────────────────────────────────┘
 ```
 
 ### What the App Calls
 
+All requests go to `api.timepointai.com` (flash-deploy). Endpoints are organized by domain:
+
+**Flash-native endpoints** (generation, credits, auth, scenes):
 ```
-app.timepointai.com
-        │
-        ├──► api.timepointai.com (billing)
-        │       Auth0 JWT in every request
-        │       ├── POST /api/v1/generate/stream    → render a scene
-        │       ├── GET  /api/v1/credits/balance     → show credits
-        │       ├── GET  /api/v1/credits/costs       → show pricing
-        │       ├── POST /api/v1/billing/checkout    → buy credits (Stripe)
-        │       ├── GET  /api/v1/timepoints/{id}     → fetch full scene
-        │       ├── POST /api/v1/auth/login          → session start
-        │       └── GET  /api/v1/auth/me             → user profile
-        │
-        └──► api.timepointai.com (billing proxies to clockchain)
-                ├── GET  /api/v1/moments/{path}      → moment metadata
-                ├── GET  /api/v1/browse/{path}        → browse listings
-                ├── GET  /api/v1/today                → today in history
-                ├── GET  /api/v1/search?q=...         → search
-                ├── GET  /api/v1/graph/neighbors/{id} → related events
-                └── GET  /api/v1/random               → random moment
+POST /api/v1/timepoints/generate/stream   → render scene (SSE streaming)
+POST /api/v1/timepoints/generate/sync     → render scene (synchronous)
+POST /api/v1/timepoints/generate          → render scene (async + callback)
+GET  /api/v1/timepoints/{id}              → fetch full scene
+PATCH /api/v1/timepoints/{id}/visibility  → publish (private → public)
+GET  /api/v1/credits/balance              → credit balance
+GET  /api/v1/credits/costs                → credit pricing per operation
+GET  /api/v1/credits/history              → transaction ledger
+POST /api/v1/auth/login                   → session start (JWT)
+GET  /api/v1/auth/me                      → user profile
+GET  /api/v1/users/me/timepoints          → user's scenes
+POST /api/v1/users/resolve                → find-or-create user (service-key only)
+POST /api/v1/interactions/chat            → character chat
+POST /api/v1/temporal/jump                → temporal navigation
 ```
 
-All requests go to `api.timepointai.com`. Billing routes browse/search requests to Clockchain internally. The app doesn't need to know about Clockchain's internal URL.
+**Billing proxy endpoints** (payments, subscriptions):
+```
+GET  /api/v1/billing/products             → available credit packs + subscriptions
+GET  /api/v1/billing/status               → user's subscription status
+POST /api/v1/billing/stripe/checkout      → create Stripe Checkout session
+GET  /api/v1/billing/stripe/portal        → Stripe Customer Portal URL
+POST /api/v1/billing/apple/verify         → verify Apple IAP transaction
+```
+
+**Clockchain proxy endpoints** (browse, search, graph — *needs clockchain proxy in flash-deploy*):
+```
+GET  /api/v1/clockchain/moments/{path}    → moment metadata from graph
+GET  /api/v1/clockchain/browse/{path}     → hierarchical browsing
+GET  /api/v1/clockchain/today             → today in history
+GET  /api/v1/clockchain/random            → random public moment
+GET  /api/v1/clockchain/search?q=...      → full-text search
+GET  /api/v1/clockchain/graph/neighbors/{path} → related events
+GET  /api/v1/clockchain/stats             → graph statistics
+```
 
 ---
 
@@ -121,10 +165,10 @@ The app should feel like the landing page come alive — monumental Cinzel headi
 ### 4.1 Home (`/`)
 
 - **Hero**: Animated orrery (from landing), search bar front and center
-- **Today in History**: 3-5 cards from `GET /api/v1/today` — auto-generated daily content
+- **Today in History**: 3-5 cards from `GET /api/v1/clockchain/today` — auto-generated daily content
 - **Recently Published**: Latest public timepoints
 - **Browse by Era**: Links to `/browse/` paths (Ancient, Medieval, Early Modern, Modern, Contemporary)
-- **Stats bar**: Total moments indexed, scenes rendered, graph edges (from `/api/v1/stats`)
+- **Stats bar**: Total moments indexed, scenes rendered, graph edges (from `/api/v1/clockchain/stats`)
 
 ### 4.2 Browse (`/browse/{path}`)
 
@@ -160,31 +204,31 @@ The app should feel like the landing page come alive — monumental Cinzel headi
 ### 4.5 Generate (`/generate`)
 
 - Large text input: "Describe a moment in history..."
-- Preset selector: balanced (default), hd (costs more credits), hyper (fast)
+- Preset selector: balanced (5 credits), hd (10 credits), hyper (5 credits, fast), gemini3 (5 credits)
 - Credit cost shown before generating
-- Generates via `POST /api/v1/generate/stream` (SSE)
-- Real-time progress: "Judging query... Grounding... Generating scene... Rendering image..."
+- Generates via `POST /api/v1/timepoints/generate/stream` (SSE)
+- Real-time progress: "Evaluating query... Researching... Building scene... Rendering image..."
 - Result appears inline, user can publish or keep private
 
 ### 4.6 Character Chat (`/moment/{path}/chat/{character_id}`)
 
-- Chat interface with a historical figure from a rendered scene
+- Chat interface with a historical figure from a rendered scene (1 credit per message)
 - Character portrait + bio in sidebar
 - Message input, streaming responses
 - Session history
 
 ### 4.7 Account (`/account`)
 
-- Profile (Auth0 user info)
+- Profile (user info)
 - Credit balance + transaction history
-- "Buy Credits" → Stripe Checkout
+- "Buy Credits" → Stripe Checkout (or Apple IAP on iOS)
 - My Timepoints (private + published)
-- API Keys (for developers) → link to api.timepointai.com docs
+- Subscription management (via Stripe Customer Portal)
 
 ### 4.8 Auth
 
-- Login: Auth0 Universal Login (redirect)
-- Callback: `/auth/callback` — handle Auth0 redirect, store JWT
+- Login: Auth0 Universal Login or Apple Sign-In (redirect)
+- Callback: `/auth/callback` — handle redirect, store JWT
 - Logout: Clear session, revoke token
 
 ---
@@ -194,18 +238,18 @@ The app should feel like the landing page come alive — monumental Cinzel headi
 ### Login
 
 1. User clicks "Sign In"
-2. Redirect to Auth0 Universal Login (`https://{AUTH0_DOMAIN}/authorize`)
+2. Redirect to Auth0 Universal Login (`https://{AUTH0_DOMAIN}/authorize`) or Apple Sign-In
 3. User authenticates (email, Google, Apple, GitHub)
-4. Auth0 redirects to `app.timepointai.com/auth/callback` with authorization code
+4. Provider redirects to `app.timepointai.com/auth/callback` with authorization code
 5. App exchanges code for JWT (via Auth0 SDK — `getAccessTokenSilently()`)
-6. App sends JWT to `POST /api/v1/auth/login` on billing
-7. Billing validates JWT, calls Flash `POST /users/resolve` with `external_id: {auth0_sub}` → auto-creates user + credit account (50 signup credits) if first login
+6. App sends JWT to `POST /api/v1/auth/login` on flash-deploy
+7. Flash-deploy validates JWT, calls `POST /users/resolve` with `external_id: {auth0_sub}` — auto-creates user + credit account (50 signup credits) if first login
 8. Store JWT in memory (not localStorage — XSS risk) or httpOnly cookie
 9. Include JWT in all requests to `api.timepointai.com`
 
 ### Token Refresh
 
-- Auth0 JWT expiry: 15 minutes (configurable)
+- JWT expiry: 15 minutes (configurable)
 - Use Auth0 SDK `getAccessTokenSilently()` — handles refresh automatically via rotating refresh tokens
 - Falls back to re-login if refresh fails
 
@@ -214,7 +258,11 @@ The app should feel like the landing page come alive — monumental Cinzel headi
 - Browse and search work without login (public Layer 0-1 data)
 - Viewing full scenes (Layer 2) requires free login
 - Generating scenes requires login + credits
-- Buying credits requires login + Stripe
+- Buying credits requires login + Stripe/Apple IAP
+
+### Current Auth State
+
+Flash-deploy currently supports **Apple Sign-In JWT** natively. Auth0 integration is planned (the `external_id` column and `/users/resolve` endpoint are ready for it). The app should implement Auth0 as the primary web auth flow, using the Auth0 React SDK.
 
 ---
 
@@ -224,11 +272,11 @@ The app should feel like the landing page come alive — monumental Cinzel headi
 
 - **Framework**: Next.js (App Router) or Vite + React
   - Next.js if you want SSR for SEO on public moments
-  - Vite + React if pure SPA is fine (simpler, billing handles all API calls)
+  - Vite + React if pure SPA is fine (simpler)
 - **Styling**: Tailwind CSS + CSS variables from design system
 - **Auth**: Auth0 React SDK (`@auth0/auth0-react`)
 - **State**: React Query / TanStack Query (for API data caching)
-- **Streaming**: native EventSource API for SSE from `/generate/stream`
+- **Streaming**: native EventSource API for SSE from `/timepoints/generate/stream`
 - **Deployment**: Railway (Docker) or Vercel/Netlify (static)
 
 ### Auth0 SDK Setup
@@ -266,27 +314,37 @@ async function apiCall(path: string, options?: RequestInit) {
   });
 }
 
-// Browse (no auth needed for public data)
-const today = await fetch(`${API_BASE}/today`).then(r => r.json());
+// Browse clockchain (no auth needed for public data)
+const today = await fetch(`${API_BASE}/clockchain/today`).then(r => r.json());
+const browse = await fetch(`${API_BASE}/clockchain/browse/1969`).then(r => r.json());
+
+// Search (no auth needed)
+const results = await fetch(`${API_BASE}/clockchain/search?q=caesar`).then(r => r.json());
 
 // Generate (auth + credits required)
-const response = await apiCall('/generate/stream', {
+const response = await apiCall('/timepoints/generate/stream', {
   method: 'POST',
   body: JSON.stringify({ query: 'Ides of March, 44 BCE', preset: 'balanced' }),
 });
-// Handle SSE stream from response
+
+// Buy credits (auth required)
+const checkout = await apiCall('/billing/stripe/checkout', {
+  method: 'POST',
+  body: JSON.stringify({ product_id: 'com.timepoint.flash.credits.50' }),
+});
+// Redirect to checkout.checkout_url
 ```
 
 ---
 
 ## 7. SSE Streaming for Generation
 
-Flash supports streaming generation via SSE. Billing proxies this through:
+Flash supports streaming generation via SSE:
 
 ```typescript
 async function generateScene(query: string, preset: string) {
   const token = await getAccessTokenSilently();
-  const response = await fetch(`${API_BASE}/generate/stream`, {
+  const response = await fetch(`${API_BASE}/timepoints/generate/stream`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -318,7 +376,40 @@ Show progress stages in the UI:
 
 ---
 
-## 8. Deployment
+## 8. Products & Pricing
+
+### Credit Packs (one-time purchase)
+
+| Product ID | Name | Credits | Price |
+|------------|------|---------|-------|
+| `com.timepoint.flash.credits.10` | Starter | 10 | $2.99 |
+| `com.timepoint.flash.credits.50` | Explorer | 50 | $9.99 |
+| `com.timepoint.flash.credits.150` | Creator | 150 | $24.99 |
+| `com.timepoint.flash.credits.500` | Studio | 500 | $69.99 |
+
+### Subscriptions (monthly)
+
+| Product ID | Name | Credits/Month | Price |
+|------------|------|---------------|-------|
+| `com.timepoint.flash.sub.explorer` | Explorer | 100 | $7.99/mo |
+| `com.timepoint.flash.sub.creator` | Creator | 300 | $19.99/mo |
+| `com.timepoint.flash.sub.studio` | Studio | 1,000 | $49.99/mo |
+
+### Credit Costs
+
+| Operation | Credits |
+|-----------|---------|
+| Generate (balanced) | 5 |
+| Generate (hd) | 10 |
+| Generate (hyper) | 5 |
+| Generate (gemini3) | 5 |
+| Character chat | 1 |
+| Temporal jump | 2 |
+| Signup bonus | 50 (free) |
+
+---
+
+## 9. Deployment
 
 ### Railway (Docker)
 
@@ -374,15 +465,15 @@ NEXT_PUBLIC_API_BASE=https://api.timepointai.com
 
 ---
 
-## 9. Key UX Flows
+## 10. Key UX Flows
 
 ### First Visit (no login)
 
 1. Land on home → see Today in History cards, search bar, stats
-2. Browse moments by era/year/month
+2. Browse moments by era/year/month (clockchain browse API)
 3. Click a public Layer 2 moment → see metadata preview, "Sign in to view full scene"
 4. Search for events → see results with metadata
-5. Click "Sign In" → Auth0 → redirected back → billing calls Flash `/users/resolve` → account auto-created with 50 free credits
+5. Click "Sign In" → Auth0 → redirected back → flash-deploy calls `/users/resolve` → account auto-created with 50 free credits
 
 ### Returning User (logged in)
 
@@ -390,23 +481,23 @@ NEXT_PUBLIC_API_BASE=https://api.timepointai.com
 2. Browse/search with full Layer 2 access on public scenes
 3. Click "Generate" → enter query → see credit cost → confirm → watch SSE progress → scene appears
 4. Click "Publish" on a private scene → it becomes public, enriching the Clockchain
-5. Click character → chat interface opens
-6. Click "Jump Forward 1 Year" → temporal navigation generates next scene
+5. Click character → chat interface opens (1 credit per message)
+6. Click "Jump Forward 1 Year" → temporal navigation generates next scene (2 credits)
 
 ### Credit Purchase
 
 1. User runs out of credits mid-generation → "Insufficient credits" modal
-2. "Buy Credits" → pricing cards (50 credits / $4.99, 200 / $14.99, etc.)
+2. "Buy Credits" → pricing cards from `/api/v1/billing/products`
 3. Click → Stripe Checkout opens → payment → webhook → credits appear instantly
 4. Continue generating
 
 ---
 
-## 10. Key Design Decisions
+## 11. Key Design Decisions
 
 1. **SPA, not MPA** — single page app for smooth navigation
-2. **All API calls through billing** — app never calls Flash or Clockchain directly
-3. **Auth0 React SDK** — handles login, token refresh, session management
+2. **All API calls through flash-deploy** — app calls `api.timepointai.com` only; never calls billing or clockchain directly
+3. **Auth0 React SDK** — handles login, token refresh, session management (web). Apple Sign-In for iOS.
 4. **TIMEPOINT design system** — must match landing page aesthetics exactly
 5. **SSE for generation** — real-time progress, not polling
 6. **Public browse without login** — Layer 0-1 is free, login for Layer 2
@@ -416,11 +507,11 @@ NEXT_PUBLIC_API_BASE=https://api.timepointai.com
 
 ---
 
-## 11. What Success Looks Like
+## 12. What Success Looks Like
 
 ### Phase 1 (Build Now)
 - [ ] Auth0 login/logout working
-- [ ] Home page with Today in History (from Clockchain via billing)
+- [ ] Home page with Today in History (from clockchain proxy)
 - [ ] Browse view (hierarchical temporal navigation)
 - [ ] Moment detail view (full scene display for Layer 2)
 - [ ] Search
@@ -430,33 +521,55 @@ NEXT_PUBLIC_API_BASE=https://api.timepointai.com
 
 ### Phase 2 (Generation)
 - [ ] Generate view with SSE streaming
-- [ ] Preset selector with credit cost display
+- [ ] Preset selector with credit cost display (4 presets)
 - [ ] Private/public toggle + publish flow
-- [ ] Stripe credit purchase
+- [ ] Stripe credit purchase (via billing proxy)
 - [ ] Character chat interface
 - [ ] Temporal navigation (jump forward/backward)
 
 ### Phase 3 (Polish)
 - [ ] Graph visualization (neighbors/connections view)
 - [ ] User profile + timepoint history
-- [ ] API key management (link to developer docs)
+- [ ] Subscription management (Stripe Customer Portal)
 - [ ] Mobile optimization
 - [ ] Loading animations (orrery rings)
 
 ---
 
-## 12. Services Reference
+## 13. Prerequisites (Dependencies on Other Services)
+
+### Clockchain Proxy (not yet built)
+
+The clockchain has a full API (browse, search, today, random, stats, neighbors) but **no public proxy exists** in flash-deploy. The app needs a `clockchain_proxy.py` added to flash-deploy (similar to the existing `billing_proxy.py`) that forwards:
+
+```
+/api/v1/clockchain/*  →  http://timepoint-clockchain.railway.internal:8080/api/v1/*
+```
+
+**This must be built in flash-deploy before the app can access browse/search data.**
+
+### Auth0 Integration
+
+Flash-deploy currently supports Apple Sign-In JWT. Auth0 needs to be configured:
+1. Auth0 tenant setup for TIMEPOINT
+2. Social connections: Apple Sign-In, Google, GitHub, email/password
+3. API audience: `https://api.timepointai.com`
+4. Flash-deploy updated to accept Auth0 JWTs (the `external_id` column and `/users/resolve` endpoint are already ready)
+
+---
+
+## 14. Services Reference
 
 | Service | Repo | Domain | Status |
 |---------|------|--------|--------|
 | Landing | timepoint-landing | `timepointai.com` | Live |
-| Flash | timepoint-flash-deploy | *(internal)* | Live (billing integration deployed) |
-| Clockchain | timepoint-clockchain | *(internal)* | Building |
+| Flash-deploy | timepoint-flash-deploy | `api.timepointai.com` | Live (gateway: auth, credits, generation, billing proxy) |
+| Billing | timepoint-billing | *(internal)* | Live v0.3.0 (Stripe, Apple IAP, subscriptions) |
+| Clockchain | timepoint-clockchain | *(internal)* | Live (graph, browse/search, workers) — needs proxy in flash-deploy |
 | App | timepoint-app | `app.timepointai.com` | **BUILD THIS** |
-| Billing | timepoint-billing | `api.timepointai.com` | Building (flash_client.py done) |
 
 ---
 
-**TIMEPOINT · Synthetic Time Travel™**
+**TIMEPOINT · Synthetic Time Travel**
 
 *"The App is the window into the Clockchain. Every moment in history, browsable, searchable, renderable — standing inside time itself."*
